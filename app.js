@@ -1,5 +1,5 @@
-import {createExhibitionView} from './scene.js?v=20261015-venue2';
-import {exhibitionData} from './source-data.js?v=20261015-venue2';
+import {createExhibitionView} from './scene.js?v=20261015-venue3';
+import {exhibitionData} from './source-data.js?v=20261015-venue3';
 
 const $=id=>document.getElementById(id);
 const all=s=>[...document.querySelectorAll(s)];

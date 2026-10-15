@@ -5,7 +5,7 @@ export const exhibitionData = {
     scale:'FIL / 会場原図の外形・寸法鎖に基づく再構成',metrics:[['展示作品','2','作品'],['カウンター','1','か所'],['入口','1','か所']],
     layers:[['architecture','外周・柱・既存諸室'],['counter','バーカウンター'],['entrance','入口・階段'],['coreWork','De-symmetrical Core'],['frequenciesWork','liberated frequencies']],
     inventory:[
-      ['De-symmetrical Core','1','主展示空間・原図「展示2」','アクリル・石・アーム・12chを、会場上側の広い空間に配置。個別ビューの囲いは重ねていません。'],
+      ['De-symmetrical Core','1','主展示空間・原図「展示2」','会場内では正面を90°回し、カウンター側へ向けています。正面から横4列×奥行3列の12ch。'],
       ['liberated frequencies','1','L字の下側・原図「展示1」','前のEEG台、後ろの縦画面付き傾斜台、左右のヘッドフォン。壁面は南側へ向けて配置。'],
       ['バーカウンター','1','原図の平面外形をトレース','長いカウンターとその先の張り出し・カウンター前の通路を立体化。高さ・建具の細部は推定。'],
       ['入口・階段','1','原図北東側・階段から西向きに入場','階段の平面範囲、踊り場、入口扉の位置を再現。段の高さ・手すりは立体化のための推定。'],
@@ -13,7 +13,7 @@ export const exhibitionData = {
       ['既存の諸室','6','中庭・バックヤード・機械室・男女トイレ・倉庫','原図の区画と扉の位置を参照。展示を見るため壁の一部を開いて表示できます。'],
       ['Intro / Talkの空間','1','主展示室とカウンターの間','資料で示された空きのある領域。椅子や来場者の配置は確定情報がないため設けていません。']
     ],
-    notes:`<div class="source-note"><h3>会場の原図 <span class="source-badge">PDF p.2</span></h3><p>2ページに埋め込まれた元の会場平面図を参照。黒い展示イメージで覆われる前の原図には、外周・柱・階段・カウンター・諸室と寸法鎖が含まれています。</p></div><div class="source-note"><h3>縮尺と配置</h3><p>原図のmmの寸法鎖から縮尺を合わせ、L字形の床と既存構造をトレースしました。Coreは原図の「展示2」、frequenciesは「展示1」に対応させています。作品の正確な座標は配置図からの再構成です。</p></div><div class="source-note"><h3>什器の前後関係 <span class="source-badge">ユーザー補足</span></h3><p>liberated frequenciesは前に直方体の脳波計台、後ろに傾斜面を持つ別の台。その斜面を縦長の18.5インチ画面が大きく占める配置です。</p></div><div class="source-note"><h3>立面に関する推定</h3><p>会場原図は平面図のため、壁・柱・カウンターの高さ、階段の段差・手すり、扉の外観は推定です。作品ごとの囲いを会場全体へ持ち込まず、同一の床上で2作品が見えるようにしています。</p></div>`
+    notes:`<div class="source-note"><h3>会場の原図 <span class="source-badge">PDF p.2</span></h3><p>2ページに埋め込まれた元の会場平面図を参照。黒い展示イメージで覆われる前の原図には、外周・柱・階段・カウンター・諸室と寸法鎖が含まれています。</p></div><div class="source-note"><h3>縮尺と配置</h3><p>原図のmmの寸法鎖から縮尺を合わせ、L字形の床と既存構造をトレースしました。Coreは原図の「展示2」、frequenciesは「展示1」に対応。Coreの正面はユーザー指定で90°回し、カウンター側へ。横4列×奥行3列です。作品の中心座標は配置図からの再構成です。</p></div><div class="source-note"><h3>什器の前後関係 <span class="source-badge">ユーザー補足</span></h3><p>liberated frequenciesは前に直方体の脳波計台、後ろに傾斜面を持つ別の台。その斜面を縦長の18.5インチ画面が大きく占める配置です。</p></div><div class="source-note"><h3>立面に関する推定</h3><p>会場原図は平面図のため、壁・柱・カウンターの高さ、階段の段差・手すり、扉の外観は推定です。作品ごとの囲いを会場全体へ持ち込まず、同一の床上で2作品が見えるようにしています。</p></div>`
   },
   core: {
     title:'De-symmetrical<br>Core', short:'DE-SYMMETRICAL CORE',
@@ -28,7 +28,7 @@ export const exhibitionData = {
       ['点光源','1','アーム先端','白色の集中光と床への投影影を描画。光学測定値に基づくものではありません。'],
       ['影解析カメラ','2','天井支持ポール','機材表（p.10）の2台を採用。構成図（p.8）にはカメラの記号が3つあり、台数に差があります。']
     ],
-    notes:`<div class="source-note"><h3>室内寸法 <span class="source-badge">PDF p.8</span></h3><dl><div><dt>間口 × 奥行 × 高さ</dt><dd>6.5 × 4.6 × 2.6 m</dd></div><div><dt>スピーカー配列</dt><dd>天井 4列 × 3行</dd></div><div><dt>アクリル底面</dt><dd>1.618 × 1.000 m</dd></div></dl></div><div class="source-note"><h3>アクリルの読み取り</h3><p>図には「1.618」「1」「1」の寸法記号があります。高さ付近の「1」は指す辺が曖昧なため、高さ0.618 m・上面約0.62 × 0.38 m・板厚8 mmを暫定の再構成値にしています。高さは「表示」から変更できます。</p></div><div class="source-note"><h3>図と機材表の差 <span class="source-badge">p.8 / p.10</span></h3><p>構成図にはカメラ記号が3つありますが、PDF内の機材表は2台です。このビューでは2台を再現。機材の正確な座標・石のサイズ・アームの形状・支持材は推定です。</p></div><div class="source-note"><h3>見え方について</h3><p>前壁と天井を開いた状態が初期表示です。「鑑賞位置」で室内に入り、壁・天井を閉じると展示イメージに近い暗い空間になります。</p></div>`
+    notes:`<div class="source-note"><h3>室内寸法 <span class="source-badge">PDF p.8</span></h3><dl><div><dt>間口 × 奥行 × 高さ</dt><dd>6.5 × 4.6 × 2.6 m</dd></div><div><dt>スピーカー配列</dt><dd>天井 4列 × 3行</dd></div><div><dt>アクリル底面</dt><dd>1.618 × 1.000 m</dd></div></dl></div><div class="source-note"><h3>アクリルの読み取り</h3><p>図には「1.618」「1」「1」の寸法記号があります。高さ付近の「1」は指す辺が曖昧なため、高さ0.618 m・上面約0.62 × 0.38 m・板厚8 mmを暫定の再構成値にしています。高さは「表示」から変更できます。</p></div><div class="source-note"><h3>図と機材表の差 <span class="source-badge">p.8 / p.10</span></h3><p>構成図にはカメラ記号が3つありますが、PDF内の機材表は2台です。このビューでは2台を再現。機材の正確な座標・石のサイズ・アームの形状・支持材は推定です。</p></div><div class="source-note"><h3>会場内の正面</h3><p>会場全体ではCoreを90°回してカウンター側へ向けています。正面のスピーカー配列は横4列×奥行3列。この個別ビューは作品の正面を基準に表示します。</p></div><div class="source-note"><h3>見え方について</h3><p>前壁と天井を開いた状態が初期表示です。「鑑賞位置」で室内に入り、壁・天井を閉じると展示イメージに近い暗い空間になります。</p></div>`
   },
   frequencies: {
     title:'liberated<br>frequencies',short:'LIBERATED FREQUENCIES',

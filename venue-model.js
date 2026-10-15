@@ -3,13 +3,14 @@ import * as THREE from 'three';
 // Traced from the unobscured floor plan embedded in Dot_Area.pdf p.2.
 // World origin = plan pixel (149,114). X points right; Z points down the plan.
 // Plan chains give 46.8 px/m. Elevations and small construction details are estimates.
+// Core front is rotated 90 degrees toward the counter per the user correction.
 const SCALE=46.8, ORIGIN=[149,114];
 const P=(x,z,y=0)=>new THREE.Vector3((x-ORIGIN[0])/SCALE,y,(z-ORIGIN[1])/SCALE);
 const V=(x,y,z)=>new THREE.Vector3(x,y,z);
 const FLOOR=[[148,106],[509,106],[509,114],[756,114],[756,143],[908,143],[908,540],[507,540],[507,650],[50,650],[50,536],[148,536]];
 const LANDING=[[500,114],[500,81],[551,30],[766,30],[766,94],[576,94],[576,114]];
 const ANCHORS={
-  core:{position:[3.75,0,3.4],rotationY:0},
+  core:{position:[3.75,0,3.4],rotationY:Math.PI/2},
   frequencies:{position:[3.75,0,9.9],rotationY:Math.PI},
   intro:{position:[8,0,4],rotationY:0},
   counter:{position:[10.64,0,2.79],rotationY:0},

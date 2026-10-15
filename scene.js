@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { buildVenueArchitecture } from './venue-model.js?v=20261015-venue2';
+import { buildVenueArchitecture } from './venue-model.js?v=20261015-venue3';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
@@ -320,7 +320,7 @@ export function createExhibitionView(container, callbacks={}) {
   const architectureRoot=venueModel.group||venueModel;
   venueRoot.add(architectureRoot);
   for(const [n,g]of Object.entries(venueModel.layerGroups||{})){if(venue.layers[n])venueRoot.remove(venue.layers[n]);venue.layers[n]=g;venue.layerTargets[n].push(g);}
-  venue.anchors=venueModel.anchors||{core:{position:[3.75,0,3.4],rotationY:0},frequencies:{position:[3.75,0,9.9],rotationY:Math.PI},bar:{position:[10.64,0,2.79]},entrance:{position:[8.16,0,-.32]}};
+  venue.anchors=venueModel.anchors||{core:{position:[3.75,0,3.4],rotationY:Math.PI/2},frequencies:{position:[3.75,0,9.9],rotationY:Math.PI},bar:{position:[10.64,0,2.79]},entrance:{position:[8.16,0,-.32]}};
   function anchorValues(name){const raw=venue.anchors[name]||(name==='counter'?venue.anchors.bar:null)||{};const position=Array.isArray(raw)?raw:(raw.position||raw.center||[0,0,0]);return {position,rotationY:raw.rotationY??raw.rotation??0};}
   function cloneInstallation(space,name){
     const cloned=space.group.clone(true);cloned.name=`${name}-installation`;cloned.visible=true;
@@ -338,7 +338,7 @@ export function createExhibitionView(container, callbacks={}) {
     return {group:cloned,map:objectMap};
   }
   const venueCore=cloneInstallation(core,'core'),venueFrequencies=cloneInstallation(frequencies,'frequencies');
-  makeLabel('De-symmetrical Core',venue.layers.labels,V(3.75,.18,5.8),{size:.28,opacity:.95});
+  makeLabel('De-symmetrical Core',venue.layers.labels,V(6.2,.18,3.4),{size:.28,opacity:.95});
   makeLabel('liberated frequencies',venue.layers.labels,V(3.75,.18,8.65),{size:.28,opacity:.95});
   venue.coreClone=venueCore.group;venue.frequencyClone=venueFrequencies.group;venue.coreRobot=venueCore.map.get(core.robot);venue.coreSpot=venueCore.map.get(core.spot);
   venue.spotObjects=core.spotObjects.map(o=>venueCore.map.get(o));
@@ -381,11 +381,11 @@ export function createExhibitionView(container, callbacks={}) {
     const coreScene=currentScene==='core';
     const views=currentScene==='venue'?{
       perspective:{pos:[23,18,-16],target:[6,.4,4.7],fov:43},
-      front:{pos:[5.5,8.2,27],target:[5.5,.5,4.8],fov:43},
+      front:{pos:[29,6.8,4.8],target:[5.5,.7,4.8],fov:43},
       top:{pos:[5.4,28,5.05],target:[5.4,0,5.0],fov:43},
-      side:{pos:[29,10,5],target:[5.2,.7,5],fov:43},
+      side:{pos:[5.5,8.2,27],target:[5.5,.5,4.8],fov:43},
       visitor:{pos:[8.2,1.65,1.4],target:[4.1,.75,4.5],fov:68},
-      detail:{pos:[8.7,4.9,9.2],target:[3.75,.65,3.4],fov:43}
+      detail:{pos:[9.55,4.9,-1.55],target:[3.75,.65,3.4],fov:43}
     }:coreScene?{
       perspective:{pos:[5.9,4.1,8.0],target:[0,.72,0],fov:42},front:{pos:[0,1.65,8.6],target:[0,1.25,0],fov:42},top:{pos:[0,9.8,.005],target:[0,.4,0],fov:42},side:{pos:[9,2.7,.03],target:[0,1.15,0],fov:42},visitor:{pos:[0,1.62,3.55],target:[0,.81,-.08],fov:55},detail:{pos:[1.8,1.5,2.35],target:[0,.56,0],fov:43}
     }:{perspective:{pos:[3.8,3.1,5.5],target:[0,1.25,0],fov:42},front:{pos:[0,1.8,6.5],target:[0,1.45,0],fov:42},top:{pos:[0,7.3,.005],target:[0,.8,0],fov:42},side:{pos:[6,2.5,.03],target:[0,1.35,0],fov:42},visitor:{pos:[0,1.65,2.2],target:[0,1.6,-.3],fov:65},detail:{pos:[1.1,1.85,1.6],target:[0,1.15,0],fov:45}};
@@ -399,7 +399,7 @@ export function createExhibitionView(container, callbacks={}) {
     renderer,camera,controls,scene:world,view:'perspective',
     setScene(name){if(!scenes[name])return;currentScene=name;world.fog.density=name==='venue'?.005:.027;for(const [key,space]of Object.entries(scenes))space.group.visible=key===name;select(null);setView('perspective');callbacks.onSceneChange?.(name);},
     setView,
-    setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[4.4,3.8,5.5],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
+    setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[5.5,3.8,-4.4],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
     setLayer(name,visible){if(!(name in layerState))return;layerState[name]=!!visible;applyLayer(name,!!visible);},
     setExposure(value){renderer.toneMappingExposure=THREE.MathUtils.clamp(Number(value)||1,.25,3);},
     setAutoRotate(value){controls.autoRotate=!!value;},
