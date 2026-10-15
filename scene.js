@@ -1,8 +1,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { buildVenueArchitecture } from './venue-model.js?v=20261015-curtain1';
-import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-curtain1';
-import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-curtain1';
+import { buildVenueArchitecture } from './venue-model.js?v=20261015-curtain2';
+import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-curtain2';
+import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-curtain2';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
@@ -313,7 +313,7 @@ export function createExhibitionView(container, callbacks={}) {
   podium(frequencies);headphoneStand(frequencies,-.91,1);headphoneStand(frequencies,.91,2);createProjection(frequencies);
   const freqKey=new THREE.SpotLight(0xe2e6ed,17,6,.8,.8,1.5);freqKey.position.set(0,2.8,1.05);freqKey.target.position.set(0,.8,0);freqKey.castShadow=true;freqKey.shadow.mapSize.set(1024,1024);freqKey.shadow.normalBias=.02;frequencies.layers.lights.add(freqKey,freqKey.target);
   makeLabel('liberated frequencies',frequencies.layers.labels,V(0,.03,1.05),{size:.12,background:false,opacity:.75});
-  const frequencyCurtain=buildBlackoutCurtain({register:meta,width:3,height:2.6,z:1.4,centerX:0,coverage:2/3,openingSide:'left'});
+  const frequencyCurtain=buildBlackoutCurtain({register:meta,width:3,height:2.6,ceilingHeight:3,z:1.4,centerX:0,coverage:2/3,openingSide:'left'});
   frequencies.layers.curtain.add(frequencyCurtain.group);
   const coreCarpet=buildExhibitionCarpet({register:meta,width:6.5,depth:4.6});
   core.layers.carpet.add(coreCarpet.group);
@@ -348,7 +348,7 @@ export function createExhibitionView(container, callbacks={}) {
   const venueCore=cloneInstallation(core,'core'),venueFrequencies=cloneInstallation(frequencies,'frequencies');
   // The venue curtain follows the full real gallery entrance between columns.
   // Its opening is offset so entering the room is a distinct experience.
-  const venueCurtain=buildBlackoutCurtain({register:meta,width:5.5,height:2.6,z:1.8,centerX:.09,coverage:2/3,openingSide:'left'});
+  const venueCurtain=buildBlackoutCurtain({register:meta,width:5.5,height:2.6,ceilingHeight:2.6,z:1.8,centerX:.09,coverage:2/3,openingSide:'left'});
   const venueCurtainLayer=venueFrequencies.map.get(frequencies.layers.curtain);venueCurtainLayer.clear();venueCurtainLayer.add(venueCurtain.group);
   const venueFrequencyCarpet=buildExhibitionCarpet({register:meta,width:5.5,depth:3.35,centerX:.09,centerZ:.125});
   const venueCarpetLayer=venueFrequencies.map.get(frequencies.layers.carpet);venueCarpetLayer.clear();venueCarpetLayer.add(venueFrequencyCarpet.group);

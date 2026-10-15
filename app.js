@@ -1,5 +1,5 @@
-import {createExhibitionView} from './scene.js?v=20261015-curtain1';
-import {exhibitionData} from './source-data.js?v=20261015-curtain1';
+import {createExhibitionView} from './scene.js?v=20261015-curtain2';
+import {exhibitionData} from './source-data.js?v=20261015-curtain2';
 
 const $=id=>document.getElementById(id);
 const all=s=>[...document.querySelectorAll(s)];
