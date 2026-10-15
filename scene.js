@@ -1,11 +1,12 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
+import { buildVenueArchitecture } from './venue-model.js?v=20261015-venue2';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
 const CORE_DIM = { width:6.5, depth:4.6, height:2.6, acrylicWidth:1.618, acrylicDepth:1, acrylicHeight:.618, topWidth:.62, topDepth:.38 };
-const FREQ_DIM = { width:3, depth:3, height:3, podiumWidth:.5, podiumDepth:.6, podiumHeight:1.4 };
-const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment'];
+const FREQ_DIM = { width:3, depth:3, height:3, eegPlinthWidth:.5, eegPlinthDepth:.32, eegPlinthHeight:1.05, monitorStandWidth:.26, monitorStandDepth:.22, monitorStandHeight:1.405, monitorScreenWidth:.2304, monitorScreenHeight:.4095 };
+const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork'];
 
 export function createExhibitionView(container, callbacks={}) {
   const world = new THREE.Scene();
@@ -21,7 +22,7 @@ export function createExhibitionView(container, callbacks={}) {
     fallback.textContent='3D表示を開始できませんでした。WebGLに対応したブラウザで開いてください。PDFの展示資料は画面の資料パネルから確認できます。';
     container.appendChild(fallback);
     callbacks.onError?.(error);
-    return { setScene(){},setView(){},setLayer(){},setExposure(){},setAutoRotate(){},setCutaway(){},setAcrylicHeight(){},setAnimation(){},reset(){},capture(){return null;},resize(){},getState(){return {error:'WebGL unavailable'};},dispose(){fallback.remove();} };
+    return { setScene(){},setView(){},setVenueFocus(){},setLayer(){},setExposure(){},setAutoRotate(){},setCutaway(){},setAcrylicHeight(){},setAnimation(){},reset(){},capture(){return null;},resize(){},getState(){return {error:'WebGL unavailable'};},dispose(){fallback.remove();} };
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.setSize(container.clientWidth||800,container.clientHeight||600);
@@ -35,10 +36,10 @@ export function createExhibitionView(container, callbacks={}) {
   renderer.domElement.style.cssText='display:block;width:100%;height:100%;touch-action:none;outline:none;';
   renderer.domElement.tabIndex=0;
   container.appendChild(renderer.domElement);
-  const camera = new THREE.PerspectiveCamera(42,1,.03,100);
+  const camera = new THREE.PerspectiveCamera(42,1,.03,200);
   const controls = new OrbitControls(camera, renderer.domElement);
   controls.enableDamping=true; controls.dampingFactor=.07;
-  controls.minDistance=.45; controls.maxDistance=40;
+  controls.minDistance=.45; controls.maxDistance=100;
   controls.maxPolarAngle=Math.PI*.49;
   controls.target.set(0,.9,0);
   controls.autoRotateSpeed=.32;
@@ -48,7 +49,7 @@ export function createExhibitionView(container, callbacks={}) {
   const rim=new THREE.DirectionalLight(0xa5b3c0,.65);rim.position.set(-4,3,-2);world.add(rim);
   const scenes={}, pickables=[];
   const layerState=Object.fromEntries(LAYERS.map(n=>[n,n!=='dimensions']));
-  let currentScene='core', cutaway=true, animation=false, destroyed=false, raf=0, selected=null, pointerStart=null;
+  let currentScene='venue', venue=null, cutaway=true, animation=false, destroyed=false, raf=0, selected=null, pointerStart=null;
   const clock=new THREE.Clock();
   const texturePool=[];
   const basic=(color=PALETTE.black,props={})=>new THREE.MeshStandardMaterial({color,roughness:.61,metalness:.12,...props});
@@ -100,9 +101,10 @@ export function createExhibitionView(container, callbacks={}) {
     const base=basic(0x080a0c);box(w,.048,.035,space.room,V(0,.026,-d/2+.035),base);
     box(.035,.048,d,space.room,V(-w/2+.035,.026,0),base);box(.035,.048,d,space.room,V(w/2-.035,.026,0),base);
     meta(floor,information(`${space.group.name}-room`,'展示室',space.group.name==='core'?'PDFの設置図に記された室寸法を基準に再構成。正面を開き、視点に合わせて壁・天井を省略して展示構成を確認できます。':'正面図の幅・高さを基準に再構成。奥行きは資料から確定できないため仮に3mとしています。',space.group.name==='core'?'W 6.5 × D 4.6 × H 2.6 m':'W 3.0 × D 約3.0 × H 3.0 m',space.group.name==='core'?'PDF p.8':'PDF p.6',space.group.name==='core'?'PDF記載':'再構成'));
-    dimension(V(-w/2,.01,d/2),V(w/2,.01,d/2),`W ${w.toFixed(1)} m`,space.layers.dimensions,V(0,0,.33),.15);
-    dimension(V(w/2,.01,d/2),V(w/2,.01,-d/2),`D ${d.toFixed(1)} m${space.group.name==='frequencies'?'（仮）':''}`,space.layers.dimensions,V(.3,0,0),.14);
-    dimension(V(-w/2,0,-d/2),V(-w/2,h,-d/2),`H ${h.toFixed(1)} m`,space.layers.dimensions,V(-.18,0,0),.14);
+    const roomDimensions=group(space.layers.dimensions,'room-dimensions');
+    dimension(V(-w/2,.01,d/2),V(w/2,.01,d/2),`W ${w.toFixed(1)} m`,roomDimensions,V(0,0,.33),.15);
+    dimension(V(w/2,.01,d/2),V(w/2,.01,-d/2),`D ${d.toFixed(1)} m${space.group.name==='frequencies'?'（仮）':''}`,roomDimensions,V(.3,0,0),.14);
+    dimension(V(-w/2,0,-d/2),V(-w/2,h,-d/2),`H ${h.toFixed(1)} m`,roomDimensions,V(-.18,0,0),.14);
     return space;
   }
   function bolt(parent,pos,axis='z',radius=.008){const o=cyl(radius,radius,.006,parent,pos,materials.steel,axis==='z'?[Math.PI/2,0,0]:axis==='x'?[0,0,Math.PI/2]:null);return o;}
@@ -208,7 +210,7 @@ export function createExhibitionView(container, callbacks={}) {
   createStone(core);buildAcrylic(core,CORE_DIM.acrylicHeight);createArm(core);ceilingServices(core);
   makeLabel('De-symmetrical Core',core.layers.labels,V(0,.035,1.32),{size:.13,background:false,opacity:.7});
   function signalTexture(kind='projection'){
-    const c=document.createElement('canvas');c.width=1536;c.height=kind==='projection'?600:900;
+    const c=document.createElement('canvas');c.width=kind==='projection'?1536:600;c.height=kind==='projection'?600:1024;
     const ctx=c.getContext('2d'),w=c.width,h=c.height;
     ctx.fillStyle='#080b10';ctx.fillRect(0,0,w,h);
     ctx.strokeStyle='#27313a';ctx.lineWidth=1;
@@ -228,19 +230,29 @@ export function createExhibitionView(container, callbacks={}) {
     for(let i=0;i<9;i++){const a=i*2.4,rr=(i%3+1)*r*.24;ctx.fillStyle=i%3===0?'#c2d3df':'#778d9e';ctx.beginPath();ctx.arc(cx+Math.cos(a)*rr,cy+Math.sin(a)*rr,4,0,Math.PI*2);ctx.fill();}
     const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=Math.min(renderer.capabilities.getMaxAnisotropy(),8);texturePool.push(t);return t;
   }
-  function podium(space){const g=group(space.layers.equipment,'listening-podium');const w=.5,d=.6,yFront=1.05,yBack=1.4;
-    const p=[V(-w/2,0,d/2),V(w/2,0,d/2),V(w/2,0,-d/2),V(-w/2,0,-d/2),V(-w/2,yFront,d/2),V(w/2,yFront,d/2),V(w/2,yBack,-d/2),V(-w/2,yBack,-d/2)];
-    const faces=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7]];const verts=[];for(const f of faces)for(const n of [f[0],f[1],f[2],f[0],f[2],f[3]])verts.push(...p[n].toArray());const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.computeVertexNormals();mesh(geo,basic(0x171b20,{roughness:.67}),g);
-    box(.54,.035,.64,g,V(0,.018,0),materials.dark);
-    for(let i=0;i<9;i++)box(.24,.007,.009,g,V(0,.22+i*.023,.304),materials.metal);
-    const top=group(space.layers.screens,'monitor');top.position.set(0,1.245,-.035);top.rotation.x=-Math.atan(.6/.35);
-    box(.443,.263,.025,top,V(0,0,-.012),materials.black);
-    const display=mesh(new THREE.PlaneGeometry(.414,.233),new THREE.MeshBasicMaterial({map:signalTexture('monitor'),toneMapped:false}),top,V(0,0,.003));display.castShadow=false;
-    cyl(.0025,.0025,.003,top,V(.2,-.119,.007),new THREE.MeshBasicMaterial({color:0xd4e5dc}),[Math.PI/2,0,0]);
-    const displayMeta=information('monitor','18.5インチ モニターディスプレイ','傾斜した什器上のモニターを再構成。画面上の波形は空間の見え方を確認するための模式表示で、実測データ・完成作品の映像ではありません。','18.5インチ / 表示部 約W0.414 × H0.233m（16:9仮定）','PDF p.5–6','再構成');meta(top,displayMeta);
-    meta(g,information('podium','モニター什器','幅500・奥行600・高さ1400mmの寸法図を基準に再構成。斜面角度・筐体の細部は参考イメージからの推定。PCとオーディオインターフェースは内部収納を想定。','W 0.50 × D 0.60 × H 1.40 m','PDF p.6','再構成'));
+  function podium(space){
+    // Two independent objects: a front rectangular EEG plinth and a rear
+    // slender stand whose inclined face is nearly filled by a portrait panel.
+    const g=group(space.layers.equipment,'eeg-plinth');g.position.set(0,0,.24);
+    const w=.5,d=.32,plinthHeight=1.05;
+    box(w,plinthHeight,d,g,V(0,plinthHeight/2,0),basic(0x191d22,{roughness:.67}));
+    box(w+.012,.018,d+.012,g,V(0,plinthHeight+.009,0),materials.metal);
+    box(.53,.025,.35,g,V(0,.014,0),materials.dark);
+    for(let i=0;i<7;i++)box(.23,.005,.004,g,V(0,.17+i*.02,d/2+.003),materials.metal);
+    meta(g,information('eeg-plinth','脳波計用の直方体台','前側に独立して置く脳波計用の台。後ろの傾斜ディスプレイ台とは分離した直方体です。寸法・間隔は資料と配置指示を基にした仮値。','約W 0.50 × D 0.32 × H 1.05 m（仮）','PDF p.5–6・配置指定','再構成'));
+    const stand=group(space.layers.equipment,'portrait-monitor-stand');
+    const sw=.26,backZ=-.455,frontZ=-.235,topY=1.405,frontY=1.024;
+    const pts=[V(-sw/2,0,frontZ),V(sw/2,0,frontZ),V(sw/2,0,backZ),V(-sw/2,0,backZ),V(-sw/2,frontY,frontZ),V(sw/2,frontY,frontZ),V(sw/2,topY,backZ),V(-sw/2,topY,backZ)];
+    const fs=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7]],verts=[];for(const f of fs)for(const n of [f[0],f[1],f[2],f[0],f[2],f[3]])verts.push(...pts[n].toArray());const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(verts,3));geo.computeVertexNormals();mesh(geo,basic(0x14191f,{roughness:.66}),stand);
+    box(.29,.025,.265,stand,V(0,.014,-.345),materials.dark);
+    meta(stand,information('monitor-stand','縦型ディスプレイ用の傾斜台','奥側に独立して置く細身の傾斜ディスプレイ台。18.5インチ縦画面が斜面の大部分を占めます。図面の上端高さ1.4mを基準に、幅・奥行き・斜面角度を再構成。','上端 約1.40m / 斜面 約W0.26 × L0.44m（仮）','PDF p.5–6・配置指定','再構成'));
+    const top=group(space.layers.screens,'monitor');top.position.set(0,1.2145,-.345);top.rotation.x=-Math.PI/6;
+    box(.25,.43,.018,top,V(0,0,.002),materials.black);
+    const display=mesh(new THREE.PlaneGeometry(.2304,.4095),new THREE.MeshBasicMaterial({map:signalTexture('monitor'),toneMapped:false}),top,V(0,0,.012));display.castShadow=false;
+    cyl(.0015,.0015,.002,top,V(.111,-.207,.013),new THREE.MeshBasicMaterial({color:0xd4e5dc}),[Math.PI/2,0,0]);
+    meta(top,information('monitor','18.5インチ 縦型モニター','奥の傾斜台の斜面をほぼ埋める縦型ディスプレイ。画面上の波形は空間の見え方を確認するための模式表示です。実測データや完成作品の映像ではありません。','18.5インチ / 縦表示 約W0.2304 × H0.4095m（16:9仮定）','PDF p.5–6・縦置き指定','再構成'));
     // OpenBCI UltraCortex: an open lattice cap with eight sensor housings.
-    const eeg=group(space.layers.equipment,'eeg-device');eeg.position.set(.11,1.42,-.19);
+    const eeg=group(space.layers.equipment,'eeg-device');eeg.position.set(0,1.075,.24);
     const capRadius=.086;
     for(const latitude of [.3,.62,1.02,1.42]){const r=Math.sin(latitude)*capRadius,yy=Math.cos(latitude)*capRadius;const pts=[];for(let i=0;i<=48;i++){const a=i/48*Math.PI*2;pts.push(V(Math.cos(a)*r,yy,Math.sin(a)*r));}tube(pts,.003,eeg,materials.metal);}
     for(let j=0;j<8;j++){const a=j/8*Math.PI*2;const pts=[];for(let i=0;i<=18;i++){const t=i/18*Math.PI*.5;pts.push(V(Math.cos(a)*Math.sin(t)*capRadius,Math.cos(t)*capRadius,Math.sin(a)*Math.sin(t)*capRadius));}tube(pts,.003,eeg,materials.metal);}
@@ -249,21 +261,22 @@ export function createExhibitionView(container, callbacks={}) {
     tube([V(0,.02,-.08),V(.03,0,-.1),V(.05,-.06,-.12)],.0025,eeg,materials.rubber,true);
     meta(eeg,information('eeg','OpenBCI UltraCortex 8ch','機材表記載のUltraCortexを、格子状ヘッドキャップと8個のセンサーで模式的に再構成。実機の細部や保存時の向きは推定です。','8ch / キャップ形状 約W0.18 × D0.18 × H0.10m（推定）','PDF p.6・p.9','再構成'));
     // The central earphone position is separate from the two headphone tripods.
-    const ear=group(space.layers.equipment,'earphones');ear.position.set(-.38,1.08,.10);
+    const ear=group(space.layers.equipment,'earphones');ear.position.set(-.39,1.08,.24);
     cyl(.006,.008,1.035,ear,V(0,-.547,0),materials.metal);cyl(.062,.075,.016,ear,V(0,-1.064,0),materials.black);
     rod(V(-.034,0,0),V(.034,0,0),.004,ear,materials.steel);
     for(const sx of [-.023,.023]){cyl(.007,.007,.013,ear,V(sx,-.022,.008),materials.white,[Math.PI/2,0,.4]);tube([V(sx,-.022,.009),V(sx*1.6,-.13,.025),V(0,-.37,.025),V(.01,-1.05,0)],.0014,ear,materials.rubber,true);}
-    tube([V(-.38,.026,.10),V(-.28,.026,-.18),V(.08,.026,-.32),V(.08,.47,-.32)],.002,space.layers.cables,materials.rubber,true);
+    tube([V(-.39,.026,.24),V(-.28,.026,-.18),V(.08,.026,-.32),V(.08,.47,-.32)],.002,space.layers.cables,materials.rubber,true);
     meta(ear,information('earphones','イヤフォンと専用スタンド','ヘッドフォンの三脚とは別の中央寄りの位置に、イヤフォン1組と細い専用スタンドを配置。形状・寸法は資料図からの再構成。','1組 / スタンド高さ 約1.08m（推定）','PDF p.6','再構成'));
     // The source lists two hidden PCs and one audio interface inside the stand.
-    const internals=group(g,'hidden-electronics');box(.44,.015,.5,internals,V(0,.245,0),materials.metal);
-    for(const x of [-.115,.115]){const pc=group(internals,'hidden-pc');pc.position.set(x,.365,-.03);box(.17,.22,.27,pc,V(0,0,0),materials.black);for(let i=0;i<6;i++)box(.11,.004,.003,pc,V(0,-.06+i*.016,.137),materials.metal);cyl(.008,.008,.003,pc,V(.055,.075,.138),materials.steel,[Math.PI/2,0,0]);meta(pc,information(`pc-${x<0?1:2}`,`PC ${x<0?1:2}（什器内）`,'機材表のPC2台を什器内部の棚に収納。通常の外観では筐体に隠れる配置。','2台 / 隠し収納','PDF p.6・p.9','再構成'));}
-    box(.43,.012,.38,internals,V(0,.58,-.03),materials.metal);
+    const internals=group(g,'hidden-electronics');box(.44,.015,.27,internals,V(0,.245,0),materials.metal);
+    for(const x of [-.115,.115]){const pc=group(internals,'hidden-pc');pc.position.set(x,.365,-.03);box(.17,.22,.23,pc,V(0,0,0),materials.black);for(let i=0;i<6;i++)box(.11,.004,.003,pc,V(0,-.06+i*.016,.117),materials.metal);cyl(.008,.008,.003,pc,V(.055,.075,.118),materials.steel,[Math.PI/2,0,0]);meta(pc,information(`pc-${x<0?1:2}`,`PC ${x<0?1:2}（什器内）`,'機材表のPC2台を什器内部の棚に収納。通常の外観では筐体に隠れる配置。','2台 / 隠し収納','PDF p.6・p.9','再構成'));}
+    box(.43,.012,.27,internals,V(0,.58,-.03),materials.metal);
     const audio=group(internals,'audio-interface');box(.32,.045,.18,audio,V(0,.615,-.03),materials.metal);for(const x of [-.11,-.065,.065,.11])cyl(.012,.012,.009,audio,V(x,.615,.065),materials.black,[Math.PI/2,0,0]);meta(audio,information('audio-interface','オーディオインターフェース（什器内）','機材表のオーディオインターフェース1台を什器内部に収納。','1台 / 隠し収納','PDF p.6・p.9','再構成'));
-    makeLabel('18.5″ モニター',space.layers.labels,V(.48,1.35,.14),{size:.09});makeLabel('UltraCortex / 8ch',space.layers.labels,V(.13,1.66,-.3),{size:.08});makeLabel('イヤフォン',space.layers.labels,V(-.43,1.27,.1),{size:.08});
-    dimension(V(-.25,0,.3),V(.25,0,.3),'W 0.500 m',space.layers.dimensions,V(0,0,.15),.1);
-    dimension(V(.25,0,.3),V(.25,0,-.3),'D 0.600 m',space.layers.dimensions,V(.14,0,0),.09);
-    dimension(V(-.25,0,-.3),V(-.25,1.4,-.3),'H 1.400 m',space.layers.dimensions,V(-.16,0,0),.09);
+    makeLabel('18.5″ 縦型ディスプレイ',space.layers.labels,V(.43,1.39,-.37),{size:.09});makeLabel('脳波計 / 前側の台',space.layers.labels,V(.34,1.19,.36),{size:.08});makeLabel('イヤフォン',space.layers.labels,V(-.43,1.27,.24),{size:.08});
+    dimension(V(-.25,0,.40),V(.25,0,.40),'台 W 約0.50 m',space.layers.dimensions,V(0,0,.15),.09);
+    dimension(V(.25,0,.40),V(.25,0,.08),'台 D 約0.32 m',space.layers.dimensions,V(.15,0,0),.08);
+    dimension(V(-.13,0,-.455),V(-.13,1.405,-.455),'上端 約1.40 m',space.layers.dimensions,V(-.20,0,0),.09);
+    dimension(V(-.1152,1.2145,-.345),V(.1152,1.2145,-.345),'縦画面 W 0.230 m',space.layers.dimensions,V(0,.05,.12),.075);
   }
   function headphones(parent,pos){const g=group(parent,'headphone');g.position.copy(pos);
     const band=new THREE.Mesh(new THREE.TorusGeometry(.064,.007,10,32,Math.PI),materials.black);g.add(band);
@@ -286,7 +299,7 @@ export function createExhibitionView(container, callbacks={}) {
     meta(g,information('projection','壁面プロジェクション','図面の横長投影を壁面に再構成。波形・周波数スペクトル・頭皮図は模式的な画像です。資料の完成映像や計測データは使用していません。','約W 2.42 × H 0.86 m（推定）','PDF p.5–6','再構成'));
     const projector=group(space.layers.equipment,'ceiling-projector');projector.position.set(0,2.82,.75);
     box(.27,.11,.2,projector,V(0,0,0),basic(0x33373b,{roughness:.5}));cyl(.026,.028,.04,projector,V(-.067,-.009,-.115),materials.black,[Math.PI/2,0,0]);
-    cyl(.019,.019,.003,projector,V(-.067,-.009,-.138),new THREE.MeshStandardMaterial({color:0x9aafc7,emissive:0x758fa9,emissiveIntensity:.3,roughness:.1,metalness:1}),[Math.PI/2,0,0]);
+    cyl(.019,.019,.003,projector,V(-.067,-.009,-.118),new THREE.MeshStandardMaterial({color:0x9aafc7,emissive:0x758fa9,emissiveIntensity:.3,roughness:.1,metalness:1}),[Math.PI/2,0,0]);
     cyl(.008,.008,.14,projector,V(0,.12,0),materials.steel);box(.1,.018,.1,projector,V(0,.194,0),materials.metal);
     for(let i=0;i<7;i++)box(.04,.004,.003,projector,V(.095,-.027+i*.009,-.102),materials.dark);
     tube([V(.12,2.84,.75),V(.14,2.96,.75),V(.14,2.96,-1.37),V(1.39,2.96,-1.37),V(1.39,.05,-1.37),V(.15,.025,-.32)],.006,space.layers.cables);
@@ -294,12 +307,52 @@ export function createExhibitionView(container, callbacks={}) {
     makeLabel('壁面プロジェクション',space.layers.labels,V(0,2.68,-1.4),{size:.12,opacity:.85});
   }
   const frequencies=scenes.frequencies=buildRoom(makeSpace('frequencies',{...FREQ_DIM}));
-  const beam=group(frequencies.room,'overhead-beam');box(.28,1,1.6,beam,V(1.36,2.5,-.68),basic(0x202327,{roughness:.9}));meta(beam,information('overhead-beam','梁・下端高さ2m','側面図に示された下端2mの梁を右奥に再構成。平面位置・梁幅は資料から確定できないため仮の配置。','室高3.0m / 梁下端2.0m / 平面位置は仮','PDF p.6','再構成'));dimension(V(1.2,0,-.55),V(1.2,2,-.55),'梁下 2.0 m',frequencies.layers.dimensions,V(.06,0,.09),.10);
+  const beam=group(frequencies.room,'overhead-beam');box(.28,1,1.6,beam,V(1.36,2.5,-.68),basic(0x202327,{roughness:.9}));meta(beam,information('overhead-beam','梁・下端高さ2m','側面図に示された下端2mの梁を右奥に再構成。平面位置・梁幅は資料から確定できないため仮の配置。','室高3.0m / 梁下端2.0m / 平面位置は仮','PDF p.6','再構成'));const beamDimensions=group(frequencies.layers.dimensions,'beam-dimensions');dimension(V(1.2,0,-.55),V(1.2,2,-.55),'梁下 2.0 m',beamDimensions,V(.06,0,.09),.10);
   podium(frequencies);headphoneStand(frequencies,-.91,1);headphoneStand(frequencies,.91,2);createProjection(frequencies);
   const freqKey=new THREE.SpotLight(0xe2e6ed,17,6,.8,.8,1.5);freqKey.position.set(0,2.8,1.05);freqKey.target.position.set(0,.8,0);freqKey.castShadow=true;freqKey.shadow.mapSize.set(1024,1024);freqKey.shadow.normalBias=.02;frequencies.layers.lights.add(freqKey,freqKey.target);
   makeLabel('liberated frequencies',frequencies.layers.labels,V(0,.03,1.05),{size:.12,background:false,opacity:.75});
   frequencies.group.visible=false;
-  for(const space of Object.values(scenes))for(const n of LAYERS)space.layers[n].visible=layerState[n];
+  // One shared physical venue floor; standalone proposal rooms are omitted.
+  const venueModel=buildVenueArchitecture({label:makeLabel,register:meta});
+  const venueRoot=group(world,'venue');
+  venue=scenes.venue={group:venueRoot,layers:{},layerTargets:{},dims:{...(venueModel.dimensions||{width:15,depth:13.5,height:2.6})},walls:[],roof:null,model:venueModel};
+  for(const n of LAYERS){venue.layers[n]=group(venueRoot,`venue-${n}`);venue.layerTargets[n]=[];}
+  const architectureRoot=venueModel.group||venueModel;
+  venueRoot.add(architectureRoot);
+  for(const [n,g]of Object.entries(venueModel.layerGroups||{})){if(venue.layers[n])venueRoot.remove(venue.layers[n]);venue.layers[n]=g;venue.layerTargets[n].push(g);}
+  venue.anchors=venueModel.anchors||{core:{position:[3.75,0,3.4],rotationY:0},frequencies:{position:[3.75,0,9.9],rotationY:Math.PI},bar:{position:[10.64,0,2.79]},entrance:{position:[8.16,0,-.32]}};
+  function anchorValues(name){const raw=venue.anchors[name]||(name==='counter'?venue.anchors.bar:null)||{};const position=Array.isArray(raw)?raw:(raw.position||raw.center||[0,0,0]);return {position,rotationY:raw.rotationY??raw.rotation??0};}
+  function cloneInstallation(space,name){
+    const cloned=space.group.clone(true);cloned.name=`${name}-installation`;cloned.visible=true;
+    const originalObjects=[],clonedObjects=[],objectMap=new Map();space.group.traverse(o=>originalObjects.push(o));cloned.traverse(o=>clonedObjects.push(o));
+    originalObjects.forEach((o,i)=>objectMap.set(o,clonedObjects[i]));
+    // A SpotLight target is a separate Object3D. Use its sibling clone so that
+    // both light and aim follow the installation's rotation and translation.
+    originalObjects.forEach(o=>{if(o.isSpotLight||o.isDirectionalLight){const copy=objectMap.get(o);copy.target=objectMap.get(o.target)||o.target.clone();if(!copy.target.parent)cloned.add(copy.target);}});
+    const roomCopy=objectMap.get(space.room);if(roomCopy)roomCopy.removeFromParent();
+    const dims=objectMap.get(space.layers.dimensions);dims?.getObjectByName('room-dimensions')?.removeFromParent();dims?.getObjectByName('beam-dimensions')?.removeFromParent();
+    const anchor=anchorValues(name);cloned.position.set(...anchor.position);cloned.rotation.y=anchor.rotationY;
+    venueRoot.add(cloned);
+    for(const n of LAYERS){const copy=objectMap.get(space.layers[n]);if(copy)venue.layerTargets[n].push(copy);}
+    venue.layerTargets[name==='core'?'coreWork':'frequenciesWork'].push(cloned);
+    return {group:cloned,map:objectMap};
+  }
+  const venueCore=cloneInstallation(core,'core'),venueFrequencies=cloneInstallation(frequencies,'frequencies');
+  makeLabel('De-symmetrical Core',venue.layers.labels,V(3.75,.18,5.8),{size:.28,opacity:.95});
+  makeLabel('liberated frequencies',venue.layers.labels,V(3.75,.18,8.65),{size:.28,opacity:.95});
+  venue.coreClone=venueCore.group;venue.frequencyClone=venueFrequencies.group;venue.coreRobot=venueCore.map.get(core.robot);venue.coreSpot=venueCore.map.get(core.spot);
+  venue.spotObjects=core.spotObjects.map(o=>venueCore.map.get(o));
+  function syncVenueAcrylic(){
+    if(!venue?.coreClone)return;
+    const cloneLayer=venueCore.map.get(core.layers.acrylic);cloneLayer.clear();for(const o of core.layers.acrylic.children)cloneLayer.add(o.clone(true));
+    const cloneDims=venueCore.map.get(core.layers.dimensions);cloneDims.getObjectByName('acrylic-dimensions')?.removeFromParent();cloneDims.add(acrylicDims.clone(true));
+  }
+  function applyLayer(name,visible){
+    for(const space of Object.values(scenes)){if(space.layers[name])space.layers[name].visible=visible;if(space.layerTargets?.[name])for(const obj of space.layerTargets[name])obj.visible=visible;}
+    if(name==='arm'||name==='lights'){core.spotObjects.forEach(o=>o.visible=layerState.arm&&layerState.lights);venue?.spotObjects?.forEach(o=>o.visible=layerState.arm&&layerState.lights);}
+  }
+  core.group.visible=false;frequencies.group.visible=false;venueRoot.visible=true;
+  for(const n of LAYERS)applyLayer(n,layerState[n]);
 
   const selectionBox=new THREE.Box3Helper(new THREE.Box3(),0xa1bacb);selectionBox.visible=false;selectionBox.material.transparent=true;selectionBox.material.opacity=.5;selectionBox.material.depthTest=false;world.add(selectionBox);
   function select(object){
@@ -314,7 +367,7 @@ export function createExhibitionView(container, callbacks={}) {
     if(!pointerStart||Math.hypot(event.clientX-pointerStart.x,event.clientY-pointerStart.y)>5)return;
     const rect=renderer.domElement.getBoundingClientRect();pointer.set(((event.clientX-rect.left)/rect.width)*2-1,-((event.clientY-rect.top)/rect.height)*2+1);raycaster.setFromCamera(pointer,camera);
     const hits=raycaster.intersectObjects(scenes[currentScene].group.children,true),candidates=[];
-    for(const hit of hits){if(!hit.object.isMesh)continue;let obj=hit.object,visible=true;while(obj){if(!obj.visible)visible=false;obj=obj.parent;}if(!visible)continue;
+    for(const hit of hits){if(!hit.object.isMesh)continue;if(currentScene==='venue'&&cutaway&&hit.object.userData.cutawayWall)continue;let obj=hit.object,visible=true;while(obj){if(!obj.visible)visible=false;obj=obj.parent;}if(!visible)continue;
       obj=hit.object;while(obj&&!obj.userData.info)obj=obj.parent;if(obj?.userData.info&&!candidates.includes(obj))candidates.push(obj);}
     // Transparent acrylic should not prevent selecting the stone visible through it.
     const throughGlass=candidates[0]?.userData.info.id==='acrylic'?candidates.find(o=>o.userData.info.id==='stone'):null;
@@ -323,36 +376,46 @@ export function createExhibitionView(container, callbacks={}) {
   function onKey(event){const step=.15;if(event.key==='Escape'){select(null);return;}if(event.key==='Home'){api.reset();event.preventDefault();return;}if(event.key==='+'||event.key==='='){camera.position.lerp(controls.target,.12);event.preventDefault();}if(event.key==='-'){camera.position.add(camera.position.clone().sub(controls.target).multiplyScalar(.12));event.preventDefault();}if(event.key==='ArrowLeft'||event.key==='ArrowRight'){const delta=event.key==='ArrowLeft'?-step:step;const v=camera.position.clone().sub(controls.target);v.applyAxisAngle(V(0,1,0),delta);camera.position.copy(controls.target).add(v);event.preventDefault();}if(event.key==='ArrowUp'||event.key==='ArrowDown'){camera.position.y+=event.key==='ArrowUp'?step:-step;event.preventDefault();}}
   renderer.domElement.addEventListener('pointerdown',onPointerDown);renderer.domElement.addEventListener('pointerup',onPointerUp);renderer.domElement.addEventListener('keydown',onKey);
   let lastFitFactor=1;
-  const fitMultiplier=view=>['detail','visitor'].includes(view)?Math.min(1.18,Math.max(1,1/camera.aspect)):Math.min(3,Math.max(1,(1/camera.aspect)*(camera.aspect<.8?1.15:1)));
+  const fitMultiplier=view=>['detail','visitor'].includes(view)||view.startsWith('venue-')?Math.min(1.18,Math.max(1,1/camera.aspect)):Math.min(3,Math.max(1,(1/camera.aspect)*(camera.aspect<.8?1.15:1)));
   function setView(view='perspective'){
     const coreScene=currentScene==='core';
-    const views=coreScene?{
+    const views=currentScene==='venue'?{
+      perspective:{pos:[23,18,-16],target:[6,.4,4.7],fov:43},
+      front:{pos:[5.5,8.2,27],target:[5.5,.5,4.8],fov:43},
+      top:{pos:[5.4,28,5.05],target:[5.4,0,5.0],fov:43},
+      side:{pos:[29,10,5],target:[5.2,.7,5],fov:43},
+      visitor:{pos:[8.2,1.65,1.4],target:[4.1,.75,4.5],fov:68},
+      detail:{pos:[8.7,4.9,9.2],target:[3.75,.65,3.4],fov:43}
+    }:coreScene?{
       perspective:{pos:[5.9,4.1,8.0],target:[0,.72,0],fov:42},front:{pos:[0,1.65,8.6],target:[0,1.25,0],fov:42},top:{pos:[0,9.8,.005],target:[0,.4,0],fov:42},side:{pos:[9,2.7,.03],target:[0,1.15,0],fov:42},visitor:{pos:[0,1.62,3.55],target:[0,.81,-.08],fov:55},detail:{pos:[1.8,1.5,2.35],target:[0,.56,0],fov:43}
     }:{perspective:{pos:[3.8,3.1,5.5],target:[0,1.25,0],fov:42},front:{pos:[0,1.8,6.5],target:[0,1.45,0],fov:42},top:{pos:[0,7.3,.005],target:[0,.8,0],fov:42},side:{pos:[6,2.5,.03],target:[0,1.35,0],fov:42},visitor:{pos:[0,1.65,2.2],target:[0,1.6,-.3],fov:65},detail:{pos:[1.1,1.85,1.6],target:[0,1.15,0],fov:45}};
     const v=views[view]||views.perspective;camera.position.set(...v.pos);controls.target.set(...v.target);lastFitFactor=fitMultiplier(view);camera.position.sub(controls.target).multiplyScalar(lastFitFactor).add(controls.target);camera.fov=v.fov;camera.updateProjectionMatrix();controls.update();
     api.view=view;
   }
-  function updateCutaway(){const space=scenes[currentScene];space.roof.visible=!cutaway;for(const wall of space.walls){if(!cutaway){wall.o.visible=true;continue;}const p=camera.position;wall.o.visible=wall.side==='back'?p.z>-.1:wall.side==='left'?p.x>-.2:p.x<.2;}}
+  function updateCutaway(){const space=scenes[currentScene];if(currentScene==='venue'){
+      architectureRoot.traverse(o=>{if(o.userData.cutawayRoof)o.visible=!cutaway;if(o.userData.cutawayWall&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m.userData.originalOpacity===undefined){m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;}m.opacity=cutaway?.18:m.userData.originalOpacity;m.transparent=cutaway||m.userData.originalTransparent;m.depthWrite=cutaway?false:m.userData.originalDepthWrite;}}});return;}
+    if(space.roof)space.roof.visible=!cutaway;for(const wall of space.walls){if(!cutaway){wall.o.visible=true;continue;}const p=camera.position;wall.o.visible=wall.side==='back'?p.z>-.1:wall.side==='left'?p.x>-.2:p.x<.2;}}
   const api={
     renderer,camera,controls,scene:world,view:'perspective',
-    setScene(name){if(!scenes[name])return;currentScene=name;for(const [key,space]of Object.entries(scenes))space.group.visible=key===name;select(null);setView('perspective');callbacks.onSceneChange?.(name);},
+    setScene(name){if(!scenes[name])return;currentScene=name;world.fog.density=name==='venue'?.005:.027;for(const [key,space]of Object.entries(scenes))space.group.visible=key===name;select(null);setView('perspective');callbacks.onSceneChange?.(name);},
     setView,
-    setLayer(name,visible){if(!(name in layerState))return;layerState[name]=!!visible;for(const space of Object.values(scenes))space.layers[name].visible=!!visible;if(name==='arm'||name==='lights')core.spotObjects.forEach(o=>o.visible=layerState.arm&&layerState.lights);},
+    setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[4.4,3.8,5.5],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
+    setLayer(name,visible){if(!(name in layerState))return;layerState[name]=!!visible;applyLayer(name,!!visible);},
     setExposure(value){renderer.toneMappingExposure=THREE.MathUtils.clamp(Number(value)||1,.25,3);},
     setAutoRotate(value){controls.autoRotate=!!value;},
     setCutaway(value){cutaway=!!value;updateCutaway();},
-    setAcrylicHeight(value){const h=THREE.MathUtils.clamp(Number(value)||.618,.35,1);buildAcrylic(core,h);if(selected?.userData.info?.id==='acrylic')select(acrylicGroup);},
-    setAnimation(value){animation=!!value;if(!animation){core.robot.rotation.y=0;core.spot.position.set(.015,1.22,.015);}},
-    reset(){controls.autoRotate=false;animation=false;core.robot.rotation.y=0;renderer.toneMappingExposure=1.18;setView('perspective');select(null);},
+    setAcrylicHeight(value){const h=THREE.MathUtils.clamp(Number(value)||.618,.35,1);buildAcrylic(core,h);syncVenueAcrylic();if(selected?.userData.info?.id==='acrylic')select(currentScene==='venue'?venue.coreClone.getObjectByName('acrylic-frustum'):acrylicGroup);},
+    setAnimation(value){animation=!!value;if(!animation){core.robot.rotation.y=0;core.spot.position.set(.015,1.22,.015);if(venue){venue.coreRobot.rotation.y=0;venue.coreSpot.position.set(.015,1.22,.015);venue.coreSpot.target.position.set(0,.01,0);}}},
+    reset(){controls.autoRotate=false;animation=false;core.robot.rotation.y=0;if(venue)venue.coreRobot.rotation.y=0;renderer.toneMappingExposure=1.18;setView('perspective');select(null);},
     capture(){renderer.render(world,camera);return renderer.domElement.toDataURL('image/png');},
     resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,1);renderer.setSize(w,h);camera.aspect=w/h;const factor=fitMultiplier(api.view);camera.position.sub(controls.target).multiplyScalar(factor/lastFitFactor).add(controls.target);lastFitFactor=factor;camera.updateProjectionMatrix();},
-    getState(){const space=scenes[currentScene];const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},counts:{speakers:currentScene==='core'?12:0,cameras:currentScene==='core'?2:0,stones:currentScene==='core'?1:0,robotArms:currentScene==='core'?1:0,acrylicStructures:currentScene==='core'?1:0,headphones:currentScene==='frequencies'?4:0,headphoneStands:currentScene==='frequencies'?2:0,projectors:currentScene==='frequencies'?1:0,monitors:currentScene==='frequencies'?1:0,computers:currentScene==='frequencies'?2:0,pcs:currentScene==='frequencies'?2:0,audioInterfaces:currentScene==='frequencies'?1:0,eegDevices:currentScene==='frequencies'?1:0,earphones:currentScene==='frequencies'?1:0},objects,provisional:{acrylicHeight:true,acrylicTop:true,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
+    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,counts:{speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,provisional:{acrylicHeight:true,acrylicTop:true,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
     dispose(){destroyed=true;cancelAnimationFrame(raf);observer?.disconnect();renderer.domElement.removeEventListener('pointerdown',onPointerDown);renderer.domElement.removeEventListener('pointerup',onPointerUp);renderer.domElement.removeEventListener('keydown',onKey);controls.dispose();world.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});texturePool.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}
   };
   let observer;
   if(typeof ResizeObserver!=='undefined'){observer=new ResizeObserver(()=>api.resize());observer.observe(container);}
-  api.resize();setView('perspective');
-  function frame(){if(destroyed)return;raf=requestAnimationFrame(frame);const elapsed=clock.getElapsedTime();if(animation){core.robot.rotation.y=Math.sin(elapsed*.18)*.09;core.spot.position.x=.015+Math.sin(elapsed*.18)*.035;core.spot.target.position.x=Math.sin(elapsed*.18)*.045;}
+  world.fog.density=.005;api.resize();setView('perspective');
+  function frame(){if(destroyed)return;raf=requestAnimationFrame(frame);const elapsed=clock.getElapsedTime();if(animation){core.robot.rotation.y=Math.sin(elapsed*.18)*.09;core.spot.position.x=.015+Math.sin(elapsed*.18)*.035;core.spot.target.position.x=Math.sin(elapsed*.18)*.045;if(venue){venue.coreRobot.rotation.y=core.robot.rotation.y;venue.coreSpot.position.copy(core.spot.position);venue.coreSpot.target.position.copy(core.spot.target.position);}}
     controls.update();updateCutaway();renderer.render(world,camera);
   }
   frame();requestAnimationFrame(()=>callbacks.onReady?.(api.getState()));

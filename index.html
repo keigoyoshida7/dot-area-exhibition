@@ -7,9 +7,9 @@
   <meta name="description" content="Dot Area — 吉田慧悟による2作品の展示計画を、配置・素材・機材まで探索できるインタラクティブ3Dビュー。">
   <title>Dot Area — Exhibition in 3D</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080808'/%3E%3Ccircle cx='32' cy='32' r='8' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="./style.css?v=20261015-venue2">
   <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script>
-  <script type="module" src="./app.js"></script>
+  <script type="module" src="./app.js?v=20261015-venue2"></script>
 </head>
 <body>
   <header class="masthead">
@@ -22,14 +22,15 @@
       <div class="scene-header">
         <div class="eyebrow">AN INTERACTIVE SPATIAL STUDY</div>
         <nav class="scene-switch" aria-label="作品を選択">
-          <button class="scene-button active" data-scene="core" aria-pressed="true"><span>01</span> De-symmetrical Core</button>
-          <button class="scene-button" data-scene="frequencies" aria-pressed="false"><span>02</span> liberated frequencies</button>
+          <button class="scene-button active" data-scene="venue" aria-pressed="true"><span class="scene-number">01</span><span class="scene-name">会場全体</span></button>
+          <button class="scene-button" data-scene="core" aria-pressed="false"><span class="scene-number">02</span><span class="scene-name">De-symmetrical Core</span></button>
+          <button class="scene-button" data-scene="frequencies" aria-pressed="false"><span class="scene-number">03</span><span class="scene-name">liberated frequencies</span></button>
         </nav>
       </div>
       <div id="viewport"><div id="loading"><span class="loading-dot"></span>展示空間を読み込んでいます</div></div>
-      <div class="view-topline"><span id="view-title">斜めから</span><span id="room-scale">6.5 × 4.6 × 2.6 m</span></div>
+      <div class="view-topline"><span id="view-title">斜めから</span><span id="room-scale">FIL / 会場図に基づく再構成</span></div>
       <div class="axis-key" aria-hidden="true"><span>Y ↑</span><span>↙ Z　X →</span></div>
-      <div class="scene-caption"><span class="live-dot"></span><span id="scene-caption">01 / DE-SYMMETRICAL CORE</span><span class="caption-tail">PDFに基づく空間の再構成</span></div>
+      <div class="scene-caption"><span class="live-dot"></span><span id="scene-caption">01 / THE WHOLE VENUE</span><span class="caption-tail">PDFに基づく空間の再構成</span></div>
       <div class="viewport-actions">
         <button id="snapshot" class="square-button" title="画像を保存" aria-label="3Dビューの画像を保存">↧</button>
         <button id="fullscreen" class="square-button" title="全画面" aria-label="3Dビューを全画面表示">⛶</button>
@@ -49,8 +50,8 @@
     </section>
     <aside class="inspector" id="inspector" aria-label="展示の詳細と表示設定">
       <div class="inspector-title"><span class="eyebrow">SPACE / OBJECT / LIGHT</span><button id="panel-close" class="text-button mobile-only" aria-label="詳細を閉じる">閉じる ×</button></div>
-      <h1 id="work-title">De-symmetrical<br>Core</h1>
-      <p id="work-description" class="description">浅間石、透明なアクリル、天井から吊られたアーム。光と影の関係を、12の音の位置が取り囲む空間。</p>
+      <h1 id="work-title">Dot Area<br>会場全体</h1>
+      <p id="work-description" class="description">2作品と入口、階段、カウンター。同じ会場の中で、それぞれの場所と関係を見渡す。</p>
       <div class="metrics" id="metrics"></div>
       <div class="panel-tabs" role="tablist" aria-label="詳細表示">
         <button role="tab" aria-selected="true" aria-controls="layers-panel" id="layers-tab" data-tab="layers" class="active">表示</button>
@@ -58,6 +59,15 @@
         <button role="tab" aria-selected="false" aria-controls="notes-panel" id="notes-tab" data-tab="notes">寸法・資料</button>
       </div>
       <div id="layers-panel" class="tab-panel" role="tabpanel" aria-labelledby="layers-tab">
+        <div id="venue-settings">
+          <div class="section-label">場所へ移動</div>
+          <div class="venue-focus-controls">
+            <button data-focus="core">De-symmetrical Core <span>↗</span></button>
+            <button data-focus="frequencies">liberated frequencies <span>↗</span></button>
+            <button data-focus="bar">バーカウンター <span>↗</span></button>
+            <button data-focus="entrance">入口・階段 <span>↗</span></button>
+          </div>
+        </div>
         <div class="section-label">空間の見え方</div>
         <label class="toggle-row"><span>寸法を表示 <small>m</small></span><input id="dimensions" type="checkbox"><span class="switch"></span></label>
         <label class="toggle-row"><span>機材ラベル</span><input id="labels" type="checkbox" checked><span class="switch"></span></label>
@@ -81,14 +91,15 @@
   </main>
   <dialog id="source-dialog" aria-labelledby="source-title">
     <div class="dialog-header"><div><div class="eyebrow">REFERENCE & RECONSTRUCTION</div><h2 id="source-title">図面から、空間へ。</h2></div><button id="source-close" class="square-button" aria-label="資料を閉じる">×</button></div>
-    <p class="dialog-intro">提供された「Dot_Area.pdf」全12ページのうち、展示イメージと構成図（5–8ページ）を基に制作した3Dビューです。2作品を個別の空間として表示しています。会場全体における相互の位置関係は資料にないため含めていません。</p>
+    <p class="dialog-intro">提供された「Dot_Area.pdf」の会場原図（2ページ内の埋め込み画像）、展示イメージ・構成図（5–8ページ）、機材表を参照した3Dビューです。第1タブは2作品を同じFIL会場内に配置し、第2・第3タブで各作品を詳しく見られます。liberated frequenciesの2台の什器と縦長ディスプレイは、ユーザーの補足に基づき修正しています。</p>
     <div class="source-grid">
-      <figure><img src="./assets/core-reference.jpg" alt="PDF 7ページのDe-symmetrical Core展示イメージ" loading="lazy"><figcaption>01　De-symmetrical Core / イメージ · p.7</figcaption></figure>
-      <figure><img src="./assets/core-plan.jpg" alt="PDF 8ページの寸法と天井12スピーカー構成図" loading="lazy"><figcaption>01　構成図 · p.8</figcaption></figure>
-      <figure><img src="./assets/frequencies-reference.jpeg" alt="PDF 5ページのliberated frequencies展示イメージ" loading="lazy"><figcaption>02　liberated frequencies / イメージ · p.5</figcaption></figure>
-      <figure><img src="./assets/frequencies-plan.jpg" alt="PDF 6ページのモニターとヘッドフォン配置図" loading="lazy"><figcaption>02　構成図 · p.6</figcaption></figure>
+      <figure class="venue-plan-figure"><img src="./assets/venue-plan.png" alt="PDF 2ページに埋め込まれたFIL会場原図。入口階段・カウンター・2作品の位置" loading="lazy"><figcaption>会場原図 · PDF p.2の埋め込み図版 / 原図の寸法・外形・柱・入口・カウンターを参照</figcaption></figure>
+      <figure><img src="./assets/core-reference.jpg" alt="PDF 7ページのDe-symmetrical Core展示イメージ" loading="lazy"><figcaption>02　De-symmetrical Core / イメージ · p.7</figcaption></figure>
+      <figure><img src="./assets/core-plan.jpg" alt="PDF 8ページの寸法と天井12スピーカー構成図" loading="lazy"><figcaption>02　構成図 · p.8</figcaption></figure>
+      <figure><img src="./assets/frequencies-reference.jpeg" alt="PDF 5ページのliberated frequencies展示イメージ" loading="lazy"><figcaption>03　liberated frequencies / イメージ · p.5</figcaption></figure>
+      <figure><img src="./assets/frequencies-plan.jpg" alt="PDF 6ページのモニターとヘッドフォン配置図" loading="lazy"><figcaption>03　構成図 · p.6</figcaption></figure>
     </div>
-    <div class="source-explanation"><div><h3>資料の寸法を優先</h3><p>Coreの室内寸法、アクリル底辺、12chの配列、frequenciesの間口・高さ・什器寸法を反映。単位のないCore図面の数値はm、frequencies図面はmmとして読み取っています。</p></div><div><h3>未指定部分は再構成</h3><p>アクリルの高さ・上面・厚さ、石の凹凸、機材の外形と正確な座標、frequenciesの奥行きは推定です。照明・影・画面波形・アーム動作はブラウザ上での視覚表現で、実機の計測・制御・音響シミュレーションではありません。</p></div></div>
+    <div class="source-explanation"><div><h3>会場原図と作品の配置</h3><p>原図の寸法鎖から縮尺を合わせ、L字の外形・柱・入口の階段・カウンター・既存諸室を立体化。展示2をCore、展示1をliberated frequenciesとして配置しています。個別ビューの展示用の囲いは、会場全体ビューでは重ねて置いていません。</p></div><div><h3>未指定部分は再構成</h3><p>原図は平面図のため、壁やカウンターの高さ、扉・階段の立体形状、機材の厳密な位置は推定です。什器の前後関係とディスプレイの縦使いはユーザー補足によります。照明・影・波形・アーム動作は鑑賞用の視覚表現です。</p></div></div>
     <p class="fineprint">PDF内の開催日程や運営案を、公開・確定の告知として転載するものではありません。機材リストはPDF内の図版を参照し、リンク先のライブシートは未照合です。</p>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>

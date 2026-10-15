@@ -1,9 +1,9 @@
-import {createExhibitionView} from './scene.js';
-import {exhibitionData} from './source-data.js';
+import {createExhibitionView} from './scene.js?v=20261015-venue2';
+import {exhibitionData} from './source-data.js?v=20261015-venue2';
 
 const $=id=>document.getElementById(id);
 const all=s=>[...document.querySelectorAll(s)];
-let current='core', view, toastTimeout;
+let current='venue', view, toastTimeout;
 const settings={dimensions:false,labels:true,cutaway:true,rotate:false,exposure:1,height:.618,animation:false};
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('visible'),2800)}
@@ -18,21 +18,22 @@ function selectObject(data){
 function renderInfo(){
   const d=exhibitionData[current];
   $('work-title').innerHTML=d.title;$('work-description').textContent=d.description;$('room-scale').textContent=d.scale;
-  $('scene-caption').textContent=`${current==='core'?'01':'02'} / ${d.short}`;
+  $('scene-caption').textContent=`${({venue:'01',core:'02',frequencies:'03'})[current]} / ${d.short}`;
   $('metrics').innerHTML=d.metrics.map(([name,value,unit])=>`<div class="metric"><span>${name}</span><strong>${value}</strong><small>${unit}</small></div>`).join('');
   $('inventory').innerHTML=d.inventory.map(([name,count,dim,desc])=>`<div class="inventory-item"><div class="inventory-head"><span>${name}</span><small>${count}</small></div><div class="inventory-dim">${dim}</div><p>${desc}</p></div>`).join('');
   $('source-notes').innerHTML=d.notes;
   $('layer-list').innerHTML=d.layers.map(([id,label])=>`<label class="toggle-row"><span>${label}</span><input type="checkbox" checked data-layer="${id}" aria-label="${label}を表示"><span class="switch"></span></label>`).join('');
   d.layers.forEach(([id])=>view?.setLayer(id,true));
   all('[data-layer]').forEach(input=>input.addEventListener('change',()=>view?.setLayer(input.dataset.layer,input.checked)));
-  $('core-settings').hidden=current!=='core';$('selection').hidden=true;
+  $('core-settings').hidden=current==='frequencies';$('venue-settings').hidden=current!=='venue';$('selection').hidden=true;
+  $('inspector').scrollTop=0;
   all('[data-scene]').forEach(b=>{b.classList.toggle('active',b.dataset.scene===current);b.setAttribute('aria-pressed',String(b.dataset.scene===current))});
 }
 function changeScene(scene){
   if(!exhibitionData[scene])return;
   current=scene;view.setScene(current);renderInfo();
   view.setLayer('labels',settings.labels);view.setLayer('dimensions',settings.dimensions);view.setCutaway(settings.cutaway);view.setExposure(settings.exposure);view.setAutoRotate(settings.rotate);view.setAnimation(settings.animation);
-  if(current==='core')view.setAcrylicHeight(settings.height);
+  if(current!=='frequencies')view.setAcrylicHeight(settings.height);
   setCamera('perspective');
   const url=new URL(location.href);url.searchParams.set('scene',scene);history.replaceState({},'',url);
 }
@@ -40,6 +41,7 @@ const viewNames={perspective:'斜めから',visitor:'鑑賞位置 · 目線の�
 function setCamera(name){view?.setView(name);all('[data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));$('view-title').textContent=viewNames[name]||name;}
 all('[data-scene]').forEach(b=>b.addEventListener('click',()=>changeScene(b.dataset.scene)));
 all('[data-view]').forEach(b=>b.addEventListener('click',()=>setCamera(b.dataset.view)));
+all('[data-focus]').forEach(b=>b.addEventListener('click',()=>{view.setVenueFocus?.(b.dataset.focus);all('[data-view]').forEach(t=>t.classList.remove('active'));$('view-title').textContent=({core:'De-symmetrical Core',frequencies:'liberated frequencies',bar:'バーカウンター',entrance:'入口・階段'})[b.dataset.focus];if(innerWidth<=760)$('inspector').classList.remove('open')}));
 all('[data-tab]').forEach(b=>b.addEventListener('click',()=>{all('[data-tab]').forEach(t=>{t.classList.toggle('active',t===b);t.setAttribute('aria-selected',String(t===b))});all('.tab-panel').forEach(p=>p.hidden=p.id!==`${b.dataset.tab}-panel`)}));
 for(const id of ['dimensions','labels'])$(id).addEventListener('change',e=>{settings[id]=e.target.checked;view.setLayer(id,settings[id])});
 $('cutaway').addEventListener('change',e=>{settings.cutaway=e.target.checked;view.setCutaway(settings.cutaway)});
@@ -76,7 +78,7 @@ try{
   if(view.getState().error)throw new Error(view.getState().error);
   $('loading')?.remove();document.body.dataset.ready='true';
   const initial=new URLSearchParams(location.search).get('scene');
-  if(initial&&exhibitionData[initial])changeScene(initial);
+  changeScene(initial&&exhibitionData[initial]?initial:'venue');
   window.__exhibition={view,getState:()=>({scene:current,settings:{...settings},model:view.getState()}),selectScene:changeScene,setView:setCamera};
 }catch(err){
   console.error(err);$('loading').innerHTML='<span>3D表示を開始できませんでした。ブラウザのWebGL設定を確認してください。</span>';document.body.dataset.ready='error';
