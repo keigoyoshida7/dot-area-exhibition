@@ -1,12 +1,14 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { buildVenueArchitecture } from './venue-model.js?v=20261015-venue3';
+import { buildVenueArchitecture } from './venue-model.js?v=20261015-curtain1';
+import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-curtain1';
+import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-curtain1';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
 const CORE_DIM = { width:6.5, depth:4.6, height:2.6, acrylicWidth:1.618, acrylicDepth:1, acrylicHeight:.618, topWidth:.62, topDepth:.38 };
 const FREQ_DIM = { width:3, depth:3, height:3, eegPlinthWidth:.5, eegPlinthDepth:.32, eegPlinthHeight:1.05, monitorStandWidth:.26, monitorStandDepth:.22, monitorStandHeight:1.405, monitorScreenWidth:.2304, monitorScreenHeight:.4095 };
-const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork'];
+const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork','curtain','carpet'];
 
 export function createExhibitionView(container, callbacks={}) {
   const world = new THREE.Scene();
@@ -22,7 +24,7 @@ export function createExhibitionView(container, callbacks={}) {
     fallback.textContent='3D表示を開始できませんでした。WebGLに対応したブラウザで開いてください。PDFの展示資料は画面の資料パネルから確認できます。';
     container.appendChild(fallback);
     callbacks.onError?.(error);
-    return { setScene(){},setView(){},setVenueFocus(){},setLayer(){},setExposure(){},setAutoRotate(){},setCutaway(){},setAcrylicHeight(){},setAnimation(){},reset(){},capture(){return null;},resize(){},getState(){return {error:'WebGL unavailable'};},dispose(){fallback.remove();} };
+    return { setScene(){},setView(){},setVenueFocus(){},setCurtainView(){},setLayer(){},setExposure(){},setAutoRotate(){},setCutaway(){},setAcrylicHeight(){},setAnimation(){},reset(){},capture(){return null;},resize(){},getState(){return {error:'WebGL unavailable'};},dispose(){fallback.remove();} };
   }
   renderer.setPixelRatio(Math.min(window.devicePixelRatio||1,2));
   renderer.setSize(container.clientWidth||800,container.clientHeight||600);
@@ -311,6 +313,12 @@ export function createExhibitionView(container, callbacks={}) {
   podium(frequencies);headphoneStand(frequencies,-.91,1);headphoneStand(frequencies,.91,2);createProjection(frequencies);
   const freqKey=new THREE.SpotLight(0xe2e6ed,17,6,.8,.8,1.5);freqKey.position.set(0,2.8,1.05);freqKey.target.position.set(0,.8,0);freqKey.castShadow=true;freqKey.shadow.mapSize.set(1024,1024);freqKey.shadow.normalBias=.02;frequencies.layers.lights.add(freqKey,freqKey.target);
   makeLabel('liberated frequencies',frequencies.layers.labels,V(0,.03,1.05),{size:.12,background:false,opacity:.75});
+  const frequencyCurtain=buildBlackoutCurtain({register:meta,width:3,height:2.6,z:1.4,centerX:0,coverage:2/3,openingSide:'left'});
+  frequencies.layers.curtain.add(frequencyCurtain.group);
+  const coreCarpet=buildExhibitionCarpet({register:meta,width:6.5,depth:4.6});
+  core.layers.carpet.add(coreCarpet.group);
+  const frequencyCarpet=buildExhibitionCarpet({register:meta,width:3,depth:3});
+  frequencies.layers.carpet.add(frequencyCarpet.group);
   frequencies.group.visible=false;
   // One shared physical venue floor; standalone proposal rooms are omitted.
   const venueModel=buildVenueArchitecture({label:makeLabel,register:meta});
@@ -338,6 +346,12 @@ export function createExhibitionView(container, callbacks={}) {
     return {group:cloned,map:objectMap};
   }
   const venueCore=cloneInstallation(core,'core'),venueFrequencies=cloneInstallation(frequencies,'frequencies');
+  // The venue curtain follows the full real gallery entrance between columns.
+  // Its opening is offset so entering the room is a distinct experience.
+  const venueCurtain=buildBlackoutCurtain({register:meta,width:5.5,height:2.6,z:1.8,centerX:.09,coverage:2/3,openingSide:'left'});
+  const venueCurtainLayer=venueFrequencies.map.get(frequencies.layers.curtain);venueCurtainLayer.clear();venueCurtainLayer.add(venueCurtain.group);
+  const venueFrequencyCarpet=buildExhibitionCarpet({register:meta,width:5.5,depth:3.35,centerX:.09,centerZ:.125});
+  const venueCarpetLayer=venueFrequencies.map.get(frequencies.layers.carpet);venueCarpetLayer.clear();venueCarpetLayer.add(venueFrequencyCarpet.group);
   makeLabel('De-symmetrical Core',venue.layers.labels,V(6.2,.18,3.4),{size:.28,opacity:.95});
   makeLabel('liberated frequencies',venue.layers.labels,V(3.75,.18,8.65),{size:.28,opacity:.95});
   venue.coreClone=venueCore.group;venue.frequencyClone=venueFrequencies.group;venue.coreRobot=venueCore.map.get(core.robot);venue.coreSpot=venueCore.map.get(core.spot);
@@ -376,7 +390,7 @@ export function createExhibitionView(container, callbacks={}) {
   function onKey(event){const step=.15;if(event.key==='Escape'){select(null);return;}if(event.key==='Home'){api.reset();event.preventDefault();return;}if(event.key==='+'||event.key==='='){camera.position.lerp(controls.target,.12);event.preventDefault();}if(event.key==='-'){camera.position.add(camera.position.clone().sub(controls.target).multiplyScalar(.12));event.preventDefault();}if(event.key==='ArrowLeft'||event.key==='ArrowRight'){const delta=event.key==='ArrowLeft'?-step:step;const v=camera.position.clone().sub(controls.target);v.applyAxisAngle(V(0,1,0),delta);camera.position.copy(controls.target).add(v);event.preventDefault();}if(event.key==='ArrowUp'||event.key==='ArrowDown'){camera.position.y+=event.key==='ArrowUp'?step:-step;event.preventDefault();}}
   renderer.domElement.addEventListener('pointerdown',onPointerDown);renderer.domElement.addEventListener('pointerup',onPointerUp);renderer.domElement.addEventListener('keydown',onKey);
   let lastFitFactor=1;
-  const fitMultiplier=view=>['detail','visitor'].includes(view)||view.startsWith('venue-')?Math.min(1.18,Math.max(1,1/camera.aspect)):Math.min(3,Math.max(1,(1/camera.aspect)*(camera.aspect<.8?1.15:1)));
+  const fitMultiplier=view=>view==='curtain-inside'?1:view==='curtain-outside'?Math.min(2.2,Math.max(1,1/camera.aspect)):['detail','visitor'].includes(view)||view.startsWith('venue-')?Math.min(1.18,Math.max(1,1/camera.aspect)):Math.min(3,Math.max(1,(1/camera.aspect)*(camera.aspect<.8?1.15:1)));
   function setView(view='perspective'){
     const coreScene=currentScene==='core';
     const views=currentScene==='venue'?{
@@ -395,11 +409,39 @@ export function createExhibitionView(container, callbacks={}) {
   function updateCutaway(){const space=scenes[currentScene];if(currentScene==='venue'){
       architectureRoot.traverse(o=>{if(o.userData.cutawayRoof)o.visible=!cutaway;if(o.userData.cutawayWall&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m.userData.originalOpacity===undefined){m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;}m.opacity=cutaway?.18:m.userData.originalOpacity;m.transparent=cutaway||m.userData.originalTransparent;m.depthWrite=cutaway?false:m.userData.originalDepthWrite;}}});return;}
     if(space.roof)space.roof.visible=!cutaway;for(const wall of space.walls){if(!cutaway){wall.o.visible=true;continue;}const p=camera.position;wall.o.visible=wall.side==='back'?p.z>-.1:wall.side==='left'?p.x>-.2:p.x<.2;}}
+  const labelRay=new THREE.Raycaster(),labelPoint=V(),labelDirection=V();
+  function updateCurtainLabelOcclusion(){
+    const space=scenes[currentScene];
+    const blocksLabels=currentScene!=='core'&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork);
+    const curtain=currentScene==='venue'?venueCurtain:frequencyCurtain;
+    const fabric=blocksLabels?curtain.group.getObjectByName('tensioned-flat-blackout-fabric'):null;
+    world.updateMatrixWorld(true);
+    space.group.traverse(o=>{
+      if(!o.isSprite)return;
+      o.visible=true;
+      if(!fabric)return;
+      o.getWorldPosition(labelPoint);labelDirection.copy(labelPoint).sub(camera.position);
+      labelRay.set(camera.position,labelDirection.clone().normalize());labelRay.far=Math.max(0,labelDirection.length()-.015);
+      o.visible=labelRay.intersectObject(fabric,false).length===0;
+    });
+  }
   const api={
     renderer,camera,controls,scene:world,view:'perspective',
     setScene(name){if(!scenes[name])return;currentScene=name;world.fog.density=name==='venue'?.005:.027;for(const [key,space]of Object.entries(scenes))space.group.visible=key===name;select(null);setView('perspective');callbacks.onSceneChange?.(name);},
     setView,
     setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[5.5,3.8,-4.4],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
+    setCurtainView(location='outside'){
+      if(currentScene==='core')api.setScene('frequencies');
+      const inside=location==='inside';let pos,target;
+      if(currentScene==='venue'){
+        pos=inside?V(5.3,1.62,8.8):V(7.05,2.15,5.75);
+        target=inside?V(3.75,1.12,10.25):V(3.66,1.25,8.1);
+      }else{
+        pos=inside?V(-.8,1.62,.85):V(-2.4,1.95,3.9);
+        target=inside?V(0,1.13,-.35):V(0,1.25,1.4);
+      }
+      camera.position.copy(pos);controls.target.copy(target);api.view=inside?'curtain-inside':'curtain-outside';lastFitFactor=fitMultiplier(api.view);camera.position.sub(target).multiplyScalar(lastFitFactor).add(target);camera.fov=inside?68:56;camera.updateProjectionMatrix();controls.update();
+    },
     setLayer(name,visible){if(!(name in layerState))return;layerState[name]=!!visible;applyLayer(name,!!visible);},
     setExposure(value){renderer.toneMappingExposure=THREE.MathUtils.clamp(Number(value)||1,.25,3);},
     setAutoRotate(value){controls.autoRotate=!!value;},
@@ -409,14 +451,14 @@ export function createExhibitionView(container, callbacks={}) {
     reset(){controls.autoRotate=false;animation=false;core.robot.rotation.y=0;if(venue)venue.coreRobot.rotation.y=0;renderer.toneMappingExposure=1.18;setView('perspective');select(null);},
     capture(){renderer.render(world,camera);return renderer.domElement.toDataURL('image/png');},
     resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,1);renderer.setSize(w,h);camera.aspect=w/h;const factor=fitMultiplier(api.view);camera.position.sub(controls.target).multiplyScalar(factor/lastFitFactor).add(controls.target);lastFitFactor=factor;camera.updateProjectionMatrix();},
-    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,counts:{speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,provisional:{acrylicHeight:true,acrylicTop:true,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
+    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,curtain:{enabled:layerState.curtain,visible:hasFrequencies&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork),dimensions:hasFrequencies?(currentScene==='venue'?venueCurtain.dimensions:frequencyCurtain.dimensions):null,qrConfigured:false,qrPlaceholder:true},carpet:{enabled:layerState.carpet,areas:currentScene==='venue'?[coreCarpet.dimensions,venueFrequencyCarpet.dimensions]:[currentScene==='core'?coreCarpet.dimensions:frequencyCarpet.dimensions]},counts:{blackoutCurtains:hasFrequencies?1:0,carpets:currentScene==='venue'?2:1,speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,provisional:{acrylicHeight:true,acrylicTop:true,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
     dispose(){destroyed=true;cancelAnimationFrame(raf);observer?.disconnect();renderer.domElement.removeEventListener('pointerdown',onPointerDown);renderer.domElement.removeEventListener('pointerup',onPointerUp);renderer.domElement.removeEventListener('keydown',onKey);controls.dispose();world.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});texturePool.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}
   };
   let observer;
   if(typeof ResizeObserver!=='undefined'){observer=new ResizeObserver(()=>api.resize());observer.observe(container);}
   world.fog.density=.005;api.resize();setView('perspective');
   function frame(){if(destroyed)return;raf=requestAnimationFrame(frame);const elapsed=clock.getElapsedTime();if(animation){core.robot.rotation.y=Math.sin(elapsed*.18)*.09;core.spot.position.x=.015+Math.sin(elapsed*.18)*.035;core.spot.target.position.x=Math.sin(elapsed*.18)*.045;if(venue){venue.coreRobot.rotation.y=core.robot.rotation.y;venue.coreSpot.position.copy(core.spot.position);venue.coreSpot.target.position.copy(core.spot.target.position);}}
-    controls.update();updateCutaway();renderer.render(world,camera);
+    controls.update();updateCutaway();updateCurtainLabelOcclusion();renderer.render(world,camera);
   }
   frame();requestAnimationFrame(()=>callbacks.onReady?.(api.getState()));
   return api;

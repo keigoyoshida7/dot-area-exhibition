@@ -1,10 +1,10 @@
-import {createExhibitionView} from './scene.js?v=20261015-venue3';
-import {exhibitionData} from './source-data.js?v=20261015-venue3';
+import {createExhibitionView} from './scene.js?v=20261015-curtain1';
+import {exhibitionData} from './source-data.js?v=20261015-curtain1';
 
 const $=id=>document.getElementById(id);
 const all=s=>[...document.querySelectorAll(s)];
 let current='venue', view, toastTimeout;
-const settings={dimensions:false,labels:true,cutaway:true,rotate:false,exposure:1,height:.618,animation:false};
+const settings={dimensions:false,labels:true,cutaway:true,rotate:false,exposure:1,height:.618,animation:false,curtain:true,carpet:true};
 const escape=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function toast(message){$('toast').textContent=message;$('toast').classList.add('visible');clearTimeout(toastTimeout);toastTimeout=setTimeout(()=>$('toast').classList.remove('visible'),2800)}
 function selectObject(data){
@@ -26,13 +26,14 @@ function renderInfo(){
   d.layers.forEach(([id])=>view?.setLayer(id,true));
   all('[data-layer]').forEach(input=>input.addEventListener('change',()=>view?.setLayer(input.dataset.layer,input.checked)));
   $('core-settings').hidden=current==='frequencies';$('venue-settings').hidden=current!=='venue';$('selection').hidden=true;
+  $('curtain-settings').hidden=current==='core';
   $('inspector').scrollTop=0;
   all('[data-scene]').forEach(b=>{b.classList.toggle('active',b.dataset.scene===current);b.setAttribute('aria-pressed',String(b.dataset.scene===current))});
 }
 function changeScene(scene){
   if(!exhibitionData[scene])return;
   current=scene;view.setScene(current);renderInfo();
-  view.setLayer('labels',settings.labels);view.setLayer('dimensions',settings.dimensions);view.setCutaway(settings.cutaway);view.setExposure(settings.exposure);view.setAutoRotate(settings.rotate);view.setAnimation(settings.animation);
+  view.setLayer('labels',settings.labels);view.setLayer('dimensions',settings.dimensions);view.setLayer('curtain',settings.curtain);view.setLayer('carpet',settings.carpet);view.setCutaway(settings.cutaway);view.setExposure(settings.exposure);view.setAutoRotate(settings.rotate);view.setAnimation(settings.animation);
   if(current!=='frequencies')view.setAcrylicHeight(settings.height);
   setCamera('perspective');
   const url=new URL(location.href);url.searchParams.set('scene',scene);history.replaceState({},'',url);
@@ -42,16 +43,21 @@ function setCamera(name){view?.setView(name);all('[data-view]').forEach(b=>b.cla
 all('[data-scene]').forEach(b=>b.addEventListener('click',()=>changeScene(b.dataset.scene)));
 all('[data-view]').forEach(b=>b.addEventListener('click',()=>setCamera(b.dataset.view)));
 all('[data-focus]').forEach(b=>b.addEventListener('click',()=>{view.setVenueFocus?.(b.dataset.focus);all('[data-view]').forEach(t=>t.classList.remove('active'));$('view-title').textContent=({core:'De-symmetrical Core',frequencies:'liberated frequencies',bar:'バーカウンター',entrance:'入口・階段'})[b.dataset.focus];if(innerWidth<=760)$('inspector').classList.remove('open')}));
+all('[data-curtain-view]').forEach(b=>b.addEventListener('click',()=>{view.setCurtainView(b.dataset.curtainView);all('[data-view]').forEach(t=>t.classList.remove('active'));$('view-title').textContent=b.dataset.curtainView==='inside'?'liberated frequencies · 暗幕の中':'liberated frequencies · 暗幕の入口';if(innerWidth<=760)$('inspector').classList.remove('open')}));
 all('[data-tab]').forEach(b=>b.addEventListener('click',()=>{all('[data-tab]').forEach(t=>{t.classList.toggle('active',t===b);t.setAttribute('aria-selected',String(t===b))});all('.tab-panel').forEach(p=>p.hidden=p.id!==`${b.dataset.tab}-panel`)}));
 for(const id of ['dimensions','labels'])$(id).addEventListener('change',e=>{settings[id]=e.target.checked;view.setLayer(id,settings[id])});
 $('cutaway').addEventListener('change',e=>{settings.cutaway=e.target.checked;view.setCutaway(settings.cutaway)});
 $('rotate').addEventListener('change',e=>{settings.rotate=e.target.checked;view.setAutoRotate(settings.rotate)});
 $('animation').addEventListener('change',e=>{settings.animation=e.target.checked;view.setAnimation(settings.animation)});
+$('curtain').addEventListener('change',e=>{settings.curtain=e.target.checked;$('curtain-state').textContent=settings.curtain?'ON':'OFF';view.setLayer('curtain',settings.curtain)});
+$('carpet').addEventListener('change',e=>{settings.carpet=e.target.checked;$('carpet-state').textContent=settings.carpet?'ON':'OFF';view.setLayer('carpet',settings.carpet)});
 $('exposure').addEventListener('input',e=>{settings.exposure=+e.target.value;$('exposure-output').value=`${Math.round(settings.exposure*100)}%`;view.setExposure(settings.exposure)});
 $('acrylic-height').addEventListener('input',e=>{settings.height=+e.target.value;$('height-output').value=`${settings.height.toFixed(3)} m`;view.setAcrylicHeight(settings.height)});
 $('reset').addEventListener('click',()=>{
-  Object.assign(settings,{dimensions:false,labels:true,cutaway:true,rotate:false,exposure:1,height:.618,animation:false});
-  for(const id of ['dimensions','labels','cutaway','rotate','animation'])$(id).checked=settings[id];
+  Object.assign(settings,{dimensions:false,labels:true,cutaway:true,rotate:false,exposure:1,height:.618,animation:false,curtain:true,carpet:true});
+  for(const id of ['dimensions','labels','cutaway','rotate','animation','curtain','carpet'])$(id).checked=settings[id];
+  $('curtain-state').textContent='ON';
+  $('carpet-state').textContent='ON';
   $('exposure').value=1;$('exposure-output').value='100%';$('acrylic-height').value=.618;$('height-output').value='0.618 m';
   view.reset();changeScene(current);toast('初期表示に戻しました');
 });

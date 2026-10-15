@@ -2,9 +2,11 @@
 
 提供された `Dot_Area.pdf`（12ページ、2026-10-15書き出し）の会場原図・展示イメージ・構成図と、ユーザーの補足を参照した、ブラウザで探索できる3D再構成です。
 
-- 第1タブ「会場全体」: PDF 2ページ内の元の会場平面図をトレースしたL字形の床、構造柱、北東の入口・階段、バーカウンター、既存諸室、同一空間内の2作品。作品ごとの独立した囲いは置いていません。
+- 第1タブ「会場全体」: PDF 2ページ内の元の会場平面図をトレースしたL字形の床、構造柱、北東の入口・階段、バーカウンター、既存諸室、同一空間内の2作品。既存の床を共有し、liberated frequenciesの入口にON/OFFできる暗幕を配置しています。
 - 第2タブ「De-symmetrical Core」: 6.5 × 4.6 × 2.6 mの展示範囲、天井12ch、透明アクリル、浅間石、吊り下げアーム、白色光、カメラ。
 - 第3タブ「liberated frequencies」: 手前に脳波計を載せた直方体什器、後ろに18.5インチを縦使いした傾斜面の什器。2台は独立し、画面が傾斜面を大きく占めます。壁面投影、4台のヘッドフォン、イヤフォン、内部PC2台／オーディオI/Fも再構成。
+- 入口の暗幕: 既定ON、独立ON/OFF、間口の約2/3を覆うテンションをかけた平面の幕、残り約1/3の入口・レール・仮QR案内板。「暗幕の入口を見る」「中へ入る」で外側/内側を比較。会場全体とLF個別ビューで連動。
+- 黒カーペット: 両作品の展示範囲に敷設、既定ON、暗幕と独立ON/OFF。会場全体ではCoreの回転に追従した6.5×4.6mとLFの5.5×3.35mの範囲。敷設範囲・厚さは再構成。
 - 回転・拡大・移動、6種類の視点、寸法／機材ラベル、構成要素の表示、明るさ、アクリル高さ、画像保存、全画面。
 
 ## Source boundaries
@@ -19,6 +21,8 @@ liberated frequenciesの「手前に直方体の脳波計台」「後ろに傾�
 
 音響シミュレーション、実測脳波、機器制御は含みません。画面の波形やアーム動作は模式表現です。会期・運営計画などの確認用情報は転載していません。
 
+暗幕・カーペットはユーザーの提案を追加したもので、原図に元から描かれた設備ではありません。幕の高さ2.6m、覆う割合2/3（ユーザー指定）、入口幅は間口の1/3、敷設範囲と厚さは仮値です。QRはリンク先未定のため「QR案内（仮）／リンク先未定」と表示した案内位置で、読み取り用コードではありません。
+
 ## Local use
 
 Serve this directory with any static HTTP server, e.g. `python3 -m http.server 8000`, then open `http://localhost:8000`.
@@ -29,4 +33,4 @@ Default: venue overview. Keys: 1–6 camera views; D dimensions; L labels; R res
 
 ## Files
 
-`scene.js` procedural 3D scenes and composition; `venue-model.js` traced venue architecture; `app.js` interface; `source-data.js` inventory and source notes; `style.css` responsive black-and-white layout; `assets/` supplied PDF reference images, including the embedded venue plan. Original PDF is not redistributed.
+`scene.js` procedural 3D scenes and composition; `curtain-model.js` opaque tensioned flat curtain and temporary signage; `carpet-model.js` matte exhibition carpets; `venue-model.js` traced venue architecture; `app.js` interface; `source-data.js` inventory and source notes; `style.css` responsive black-and-white layout; `assets/` supplied PDF reference images, including the embedded venue plan. Original PDF is not redistributed.
