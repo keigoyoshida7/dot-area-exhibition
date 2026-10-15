@@ -1,0 +1,18 @@
+{
+  "name": "dot-area-3d",
+  "version": "1.0.0",
+  "scripts": {
+    "serve": "python3 -m http.server 8000",
+    "check": "node --check app.js && node --check scene.js && node --check source-data.js"
+  },
+  "keywords": [],
+  "author": "",
+  "description": "Interactive 3D reconstruction of the Dot Area exhibition proposal",
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.10"
+  },
+  "type": "module"
+}
