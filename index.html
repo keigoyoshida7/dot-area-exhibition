@@ -7,9 +7,9 @@
   <meta name="description" content="Dot Area — 吉田慧悟による2作品の展示計画を、配置・素材・機材まで探索できるインタラクティブ3Dビュー。">
   <title>Dot Area — Exhibition in 3D</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23080808'/%3E%3Ccircle cx='32' cy='32' r='8' fill='white'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./style.css?v=20261015-curtain2">
+  <link rel="stylesheet" href="./style.css?v=20261015-acrylic1">
   <script type="importmap">{"imports":{"three":"./vendor/three/three.module.js"}}</script>
-  <script type="module" src="./app.js?v=20261015-curtain2"></script>
+  <script type="module" src="./app.js?v=20261015-acrylic1"></script>
 </head>
 <body>
   <header class="masthead">
@@ -80,7 +80,7 @@
           </div>
         </div>
         <div class="section-label">空間の見え方</div>
-        <label class="toggle-row"><span>寸法を表示 <small>m</small></span><input id="dimensions" type="checkbox"><span class="switch"></span></label>
+        <label class="toggle-row"><span>寸法を表示 <small>m / mm</small></span><input id="dimensions" type="checkbox"><span class="switch"></span></label>
         <label class="toggle-row"><span>機材ラベル</span><input id="labels" type="checkbox" checked><span class="switch"></span></label>
         <label class="toggle-row"><span>壁・天井を開く</span><input id="cutaway" type="checkbox" checked><span class="switch"></span></label>
         <label class="toggle-row"><span>ゆっくり回転</span><input id="rotate" type="checkbox"><span class="switch"></span></label>
@@ -88,7 +88,7 @@
         <div id="layer-list"></div>
         <div class="range-control"><label for="exposure">空間の明るさ <output id="exposure-output">100%</output></label><input id="exposure" type="range" min="0.6" max="2.4" step="0.05" value="1"></div>
         <div id="core-settings">
-          <div class="range-control"><label for="acrylic-height">アクリルの高さ <output id="height-output">0.618 m</output></label><input id="acrylic-height" type="range" min="0.35" max="1" step="0.001" value="0.618"><p class="fineprint">上面・高さは再構成値。図面の「1」の指す辺が曖昧なため調整できます。</p></div>
+          <div class="range-control"><label for="acrylic-height">アクリルの高さを試す <output id="height-output">0.618 m</output></label><input id="acrylic-height" type="range" min="0.35" max="1" step="0.001" value="0.618"><p class="fineprint">指定画像の基準高さは618 mm。底面は前幅1,618・後幅1,000 mm、上面は前幅618・後幅382 mmの台形です。高さを変えた後は「初期表示に戻す」で指定寸法に戻せます。</p></div>
           <label class="toggle-row"><span>アーム動作のイメージ</span><input id="animation" type="checkbox"><span class="switch"></span></label>
           <p class="fineprint">動作は鑑賞用の模式表現です。</p>
         </div>
@@ -110,7 +110,7 @@
       <figure><img src="./assets/frequencies-reference.jpeg" alt="PDF 5ページのliberated frequencies展示イメージ" loading="lazy"><figcaption>03　liberated frequencies / イメージ · p.5</figcaption></figure>
       <figure><img src="./assets/frequencies-plan.jpg" alt="PDF 6ページのモニターとヘッドフォン配置図" loading="lazy"><figcaption>03　構成図 · p.6</figcaption></figure>
     </div>
-    <div class="source-explanation"><div><h3>会場原図と作品の配置</h3><p>原図の寸法鎖から縮尺を合わせ、L字の外形・柱・入口の階段・カウンター・既存諸室を立体化。展示2をCore、展示1をliberated frequenciesとして配置しています。個別ビューの展示用の囲いは、会場全体ビューでは重ねて置いていません。</p></div><div><h3>未指定部分は再構成</h3><p>原図は平面図のため、壁やカウンターの高さ、扉・階段の立体形状、機材の厳密な位置は推定です。什器の前後関係、ディスプレイの縦使い、入口の暗幕と展示床の黒カーペットはユーザーの提案を反映しています。QRは仮の案内表示で、リンク先は未定です。照明・影・波形・アーム動作は鑑賞用の視覚表現です。</p></div></div>
+    <div class="source-explanation"><div><h3>会場原図と作品の配置</h3><p>原図の寸法鎖から縮尺を合わせ、L字の外形・柱・入口の階段・カウンター・既存諸室を立体化。展示2をCore、展示1をliberated frequenciesとして配置しています。個別ビューの展示用の囲いは、会場全体ビューでは重ねて置いていません。</p></div><div><h3>未指定部分は再構成</h3><p>原図は平面図のため、壁やカウンターの高さ、扉・階段の立体形状、機材の厳密な位置は推定です。アクリルの形状・寸法は追加指定の寸法画像を優先しています。什器の前後関係、ディスプレイの縦使い、入口の暗幕と展示床の黒カーペットはユーザーの提案を反映しています。QRは仮の案内表示で、リンク先は未定です。照明・影・波形・アーム動作は鑑賞用の視覚表現です。</p></div></div>
     <p class="fineprint">PDF内の開催日程や運営案を、公開・確定の告知として転載するものではありません。機材リストはPDF内の図版を参照し、リンク先のライブシートは未照合です。</p>
   </dialog>
   <div id="toast" role="status" aria-live="polite"></div>

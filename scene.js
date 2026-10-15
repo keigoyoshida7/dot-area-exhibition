@@ -1,12 +1,16 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { buildVenueArchitecture } from './venue-model.js?v=20261015-curtain2';
-import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-curtain2';
-import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-curtain2';
+import { buildVenueArchitecture } from './venue-model.js?v=20261015-acrylic1';
+import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-acrylic1';
+import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-acrylic1';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
-const CORE_DIM = { width:6.5, depth:4.6, height:2.6, acrylicWidth:1.618, acrylicDepth:1, acrylicHeight:.618, topWidth:.62, topDepth:.38 };
+const PHI=(1+Math.sqrt(5))/2;
+// Preserve the reference simulator's precision so BC rounds to 1,046.6 mm.
+const ACRYLIC_REFERENCE={W:1.618,B:1.618/PHI,D:1.618/PHI,H:.618,w:1.618/PHI**2,d:1.618/PHI**3};
+ACRYLIC_REFERENCE.b=ACRYLIC_REFERENCE.w-(ACRYLIC_REFERENCE.W-ACRYLIC_REFERENCE.B)*ACRYLIC_REFERENCE.d/ACRYLIC_REFERENCE.D;
+const CORE_DIM = { width:6.5, depth:4.6, height:2.6, acrylicWidth:ACRYLIC_REFERENCE.W, acrylicBackWidth:ACRYLIC_REFERENCE.B, acrylicDepth:ACRYLIC_REFERENCE.D, acrylicHeight:ACRYLIC_REFERENCE.H, topWidth:ACRYLIC_REFERENCE.w, topBackWidth:ACRYLIC_REFERENCE.b, topDepth:ACRYLIC_REFERENCE.d };
 const FREQ_DIM = { width:3, depth:3, height:3, eegPlinthWidth:.5, eegPlinthDepth:.32, eegPlinthHeight:1.05, monitorStandWidth:.26, monitorStandDepth:.22, monitorStandHeight:1.405, monitorScreenWidth:.2304, monitorScreenHeight:.4095 };
 const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork','curtain','carpet'];
 
@@ -159,23 +163,26 @@ export function createExhibitionView(container, callbacks={}) {
     if(acrylicGroup){disposeTemporary(acrylicGroup);space.layers.acrylic.remove(acrylicGroup);}
     if(acrylicDims){disposeTemporary(acrylicDims);space.layers.dimensions.remove(acrylicDims);}
     acrylicGroup=group(space.layers.acrylic,'acrylic-frustum');acrylicDims=group(space.layers.dimensions,'acrylic-dimensions');
-    const bw=1.618,bd=1,tw=.62,td=.38,y=.022,h=height;
-    const points=[V(-bw/2,y,bd/2),V(bw/2,y,bd/2),V(bw/2,y,-bd/2),V(-bw/2,y,-bd/2),V(-tw/2,h,td/2),V(tw/2,h,td/2),V(tw/2,h,-td/2),V(-tw/2,h,-td/2)];
+    const {W:bw,B:bb,D:bd,w:tw,b:tb,d:td}=ACRYLIC_REFERENCE,y=.022,h=height,topY=y+h;
+    const points=[V(-bw/2,y,bd/2),V(bw/2,y,bd/2),V(bb/2,y,-bd/2),V(-bb/2,y,-bd/2),V(-tw/2,topY,td/2),V(tw/2,topY,td/2),V(tb/2,topY,-td/2),V(-tb/2,topY,-td/2)];
     const panels=[[0,1,5,4],[1,2,6,5],[2,3,7,6],[3,0,4,7],[4,5,6,7]];
     const material=new THREE.MeshPhysicalMaterial({color:0xb5c4ce,metalness:0,roughness:.09,transmission:.72,thickness:.005,ior:1.49,clearcoat:1,clearcoatRoughness:.06,transparent:true,opacity:.19,side:THREE.DoubleSide,depthWrite:false});
-    for(const face of panels){const a=[];for(const i of [face[0],face[1],face[2],face[0],face[2],face[3]])a.push(...points[i].toArray());const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(a,3));geo.computeVertexNormals();const m=mesh(geo,material,acrylicGroup);m.castShadow=false;m.receiveShadow=false;}
+    for(const [index,face] of panels.entries()){const a=[];for(const i of [face[0],face[1],face[2],face[0],face[2],face[3]])a.push(...points[i].toArray());const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(a,3));geo.computeVertexNormals();const m=mesh(geo,material,acrylicGroup);m.name=`acrylic-panel-${index+1}`;m.castShadow=false;m.receiveShadow=false;}
     const pairs=[[0,1],[1,2],[2,3],[3,0],[4,5],[5,6],[6,7],[7,4],[0,4],[1,5],[2,6],[3,7]];
     for(const [a,b] of pairs){line([points[a],points[b]],acrylicGroup,0xd1e1eb,.7);rod(points[a],points[b],.0017,acrylicGroup,new THREE.MeshBasicMaterial({color:0xcbdce7,transparent:true,opacity:.35}));}
     for(const i of [0,1,2,3])cyl(.013,.013,.012,acrylicGroup,points[i].clone().add(V(0,-.008,0)),materials.steel);
-    meta(acrylicGroup,information('acrylic','台形アクリル構造','底面は図面記載の1.618×1m。上面寸法と高さは参考図に合わせた仮値。高さは画面のスライダーで変更できます。図の斜辺付近の「1」は高さとして確定していません。',`底面 W 1.618 × D 1.000 m / H ${h.toFixed(3)} m（仮）/ 上面 約0.62 × 0.38 m`,'PDF p.7–8','再構成'));
-    dimension(points[0],points[1],'1.618 m',acrylicDims,V(0,0,.13),.1);
-    dimension(points[1],points[2],'1.000 m',acrylicDims,V(.16,0,0),.1);
-    dimension(points[4],points[5],'約0.620 m',acrylicDims,V(0,.085,.04),.09);
-    dimension(points[5],points[6],'約0.380 m',acrylicDims,V(.11,.07,0),.085);
-    dimension(V(-bw/2,.022,bd/2),V(-bw/2,h,bd/2),`H ${h.toFixed(3)} m（仮）`,acrylicDims,V(-.13,0,0),.09);
-    const slopeW=Math.sqrt(((bw-tw)/2)**2+(h-y)**2),slopeD=Math.sqrt(((bd-td)/2)**2+(h-y)**2);
-    dimension(V(0,y,bd/2),V(0,h,td/2),`斜高 ${slopeD.toFixed(3)} m`,acrylicDims,V(0,0,.09),.08);
-    dimension(V(bw/2,y,0),V(tw/2,h,0),`斜高 ${slopeW.toFixed(3)} m`,acrylicDims,V(.09,0,0),.08);
+    const edges=pairs.map(([a,b])=>({id:String.fromCharCode(65+a)+String.fromCharCode(65+b),from:a,to:b,length:points[a].distanceTo(points[b])}));
+    const geometryDimensions={W:bw,B:bb,D:bd,w:tw,b:tb,d:td,H:h,BC:edges.find(e=>e.id==='BC').length,baseY:y,topY,referenceHeight:ACRYLIC_REFERENCE.H,shape:'trapezoidal-base-and-top',geometricFaces:6,edgeCount:12,renderedPanels:panels.length};
+    acrylicGroup.userData.dimensions=geometryDimensions;acrylicGroup.userData.vertices=points.map(p=>p.toArray());acrylicGroup.userData.edges=edges;
+    const mm=n=>(n*1000).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
+    const isReference=Math.abs(h-ACRYLIC_REFERENCE.H)<1e-9;
+    meta(acrylicGroup,information('acrylic','台形を底面・上面に持つアクリル','ご指定の寸法画像に合わせた形状。W・Bは底面の前幅・後幅、w・bは上面の前幅・後幅です。底面と上面はともに台形で、BCは底面の斜辺。画像と同じ黄金比の相似形を使っています。',`W ${mm(bw)} / B ${mm(bb)} / w ${mm(tw)} / b ${mm(tb)} / H ${mm(h)} / BC ${mm(geometryDimensions.BC)} mm`,'ユーザー指定寸法画像（2026-10-15）',isReference?'指定寸法':'指定寸法から高さを試算'));
+    dimension(points[0],points[1],`W ${mm(bw)} mm`,acrylicDims,V(0,0,.13),.095);
+    dimension(points[2],points[3],`B ${mm(bb)} mm`,acrylicDims,V(0,0,-.14),.085);
+    dimension(points[4],points[5],`w ${mm(tw)} mm`,acrylicDims,V(0,.085,.05),.085);
+    dimension(points[6],points[7],`b ${mm(tb)} mm`,acrylicDims,V(0,.13,-.07),.08);
+    dimension(V(-bw/2,y,bd/2),V(-bw/2,topY,bd/2),`H ${mm(h)} mm`,acrylicDims,V(-.13,0,0),.085);
+    dimension(points[1],points[2],`BC ${mm(geometryDimensions.BC)} mm`,acrylicDims,V(.17,0,0),.085);
     space.dims.acrylicHeight=h;
   }
   function createArm(space){const g=group(space.layers.arm,'articulated-arm');
@@ -451,7 +458,7 @@ export function createExhibitionView(container, callbacks={}) {
     reset(){controls.autoRotate=false;animation=false;core.robot.rotation.y=0;if(venue)venue.coreRobot.rotation.y=0;renderer.toneMappingExposure=1.18;setView('perspective');select(null);},
     capture(){renderer.render(world,camera);return renderer.domElement.toDataURL('image/png');},
     resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,1);renderer.setSize(w,h);camera.aspect=w/h;const factor=fitMultiplier(api.view);camera.position.sub(controls.target).multiplyScalar(factor/lastFitFactor).add(controls.target);lastFitFactor=factor;camera.updateProjectionMatrix();},
-    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,curtain:{enabled:layerState.curtain,visible:hasFrequencies&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork),dimensions:hasFrequencies?(currentScene==='venue'?venueCurtain.dimensions:frequencyCurtain.dimensions):null,qrConfigured:false,qrPlaceholder:true},carpet:{enabled:layerState.carpet,areas:currentScene==='venue'?[coreCarpet.dimensions,venueFrequencyCarpet.dimensions]:[currentScene==='core'?coreCarpet.dimensions:frequencyCarpet.dimensions]},counts:{blackoutCurtains:hasFrequencies?1:0,carpets:currentScene==='venue'?2:1,speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,provisional:{acrylicHeight:true,acrylicTop:true,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
+    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,curtain:{enabled:layerState.curtain,visible:hasFrequencies&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork),dimensions:hasFrequencies?(currentScene==='venue'?venueCurtain.dimensions:frequencyCurtain.dimensions):null,qrConfigured:false,qrPlaceholder:true},carpet:{enabled:layerState.carpet,areas:currentScene==='venue'?[coreCarpet.dimensions,venueFrequencyCarpet.dimensions]:[currentScene==='core'?coreCarpet.dimensions:frequencyCarpet.dimensions]},counts:{blackoutCurtains:hasFrequencies?1:0,carpets:currentScene==='venue'?2:1,speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,acrylicGeometry:{...acrylicGroup.userData.dimensions,vertices:acrylicGroup.userData.vertices,edges:acrylicGroup.userData.edges},provisional:{acrylicHeight:Math.abs(core.dims.acrylicHeight-ACRYLIC_REFERENCE.H)>1e-9,acrylicTop:false,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
     dispose(){destroyed=true;cancelAnimationFrame(raf);observer?.disconnect();renderer.domElement.removeEventListener('pointerdown',onPointerDown);renderer.domElement.removeEventListener('pointerup',onPointerUp);renderer.domElement.removeEventListener('keydown',onKey);controls.dispose();world.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});texturePool.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}
   };
   let observer;
