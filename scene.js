@@ -1,8 +1,10 @@
 import * as THREE from 'three';
 import { OrbitControls } from './vendor/three/OrbitControls.js';
-import { buildVenueArchitecture } from './venue-model.js?v=20261015-acrylic1';
-import { buildBlackoutCurtain } from './curtain-model.js?v=20261015-acrylic1';
-import { buildExhibitionCarpet } from './carpet-model.js?v=20261015-acrylic1';
+import { buildVenueArchitecture } from './venue-model.js?v=20261018-floor1';
+import { buildBlackoutCurtain } from './curtain-model.js?v=20261018-floor1';
+import { buildExhibitionCarpet } from './carpet-model.js?v=20261018-floor1';
+import { buildEntranceMonitor } from './entrance-monitor.js?v=20261018-floor1';
+import { buildWhiteTrapezoidFloor } from './white-floor-model.js?v=20261018-floor1';
 
 const V = (x=0,y=0,z=0) => new THREE.Vector3(x,y,z);
 const PALETTE = { black:0x111315, metal:0x24272a, edge:0xa6afb5, text:0xe7e8e6 };
@@ -12,7 +14,7 @@ const ACRYLIC_REFERENCE={W:1.618,B:1.618/PHI,D:1.618/PHI,H:.618,w:1.618/PHI**2,d
 ACRYLIC_REFERENCE.b=ACRYLIC_REFERENCE.w-(ACRYLIC_REFERENCE.W-ACRYLIC_REFERENCE.B)*ACRYLIC_REFERENCE.d/ACRYLIC_REFERENCE.D;
 const CORE_DIM = { width:6.5, depth:4.6, height:2.6, acrylicWidth:ACRYLIC_REFERENCE.W, acrylicBackWidth:ACRYLIC_REFERENCE.B, acrylicDepth:ACRYLIC_REFERENCE.D, acrylicHeight:ACRYLIC_REFERENCE.H, topWidth:ACRYLIC_REFERENCE.w, topBackWidth:ACRYLIC_REFERENCE.b, topDepth:ACRYLIC_REFERENCE.d };
 const FREQ_DIM = { width:3, depth:3, height:3, eegPlinthWidth:.5, eegPlinthDepth:.32, eegPlinthHeight:1.05, monitorStandWidth:.26, monitorStandDepth:.22, monitorStandHeight:1.405, monitorScreenWidth:.2304, monitorScreenHeight:.4095 };
-const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork','curtain','carpet'];
+const LAYERS = ['labels','dimensions','lights','cameras','speakers','acrylic','stone','arm','cables','screens','headphones','equipment','architecture','counter','entrance','coreWork','frequenciesWork','curtain','carpet','whiteFloor','entranceMonitor'];
 
 export function createExhibitionView(container, callbacks={}) {
   const world = new THREE.Scene();
@@ -324,8 +326,8 @@ export function createExhibitionView(container, callbacks={}) {
   frequencies.layers.curtain.add(frequencyCurtain.group);
   const coreCarpet=buildExhibitionCarpet({register:meta,width:6.5,depth:4.6});
   core.layers.carpet.add(coreCarpet.group);
-  const frequencyCarpet=buildExhibitionCarpet({register:meta,width:3,depth:3});
-  frequencies.layers.carpet.add(frequencyCarpet.group);
+  const coreWhiteFloor=buildWhiteTrapezoidFloor({width:ACRYLIC_REFERENCE.W,backWidth:ACRYLIC_REFERENCE.B,depth:ACRYLIC_REFERENCE.D,register:meta});
+  core.layers.whiteFloor.add(coreWhiteFloor.group);
   frequencies.group.visible=false;
   // One shared physical venue floor; standalone proposal rooms are omitted.
   const venueModel=buildVenueArchitecture({label:makeLabel,register:meta});
@@ -357,8 +359,10 @@ export function createExhibitionView(container, callbacks={}) {
   // Its opening is offset so entering the room is a distinct experience.
   const venueCurtain=buildBlackoutCurtain({register:meta,width:5.5,height:2.6,ceilingHeight:2.6,z:1.8,centerX:.09,coverage:2/3,openingSide:'left'});
   const venueCurtainLayer=venueFrequencies.map.get(frequencies.layers.curtain);venueCurtainLayer.clear();venueCurtainLayer.add(venueCurtain.group);
-  const venueFrequencyCarpet=buildExhibitionCarpet({register:meta,width:5.5,depth:3.35,centerX:.09,centerZ:.125});
-  const venueCarpetLayer=venueFrequencies.map.get(frequencies.layers.carpet);venueCarpetLayer.clear();venueCarpetLayer.add(venueFrequencyCarpet.group);
+  const entranceMonitor=buildEntranceMonitor({register:meta});
+  entranceMonitor.group.position.set(7.65,0,1.35);entranceMonitor.group.rotation.y=2.845;
+  venue.layers.entranceMonitor.add(entranceMonitor.group);
+  venue.anchors.information={position:[7.65,0,1.35],rotationY:2.845};
   makeLabel('De-symmetrical Core',venue.layers.labels,V(6.2,.18,3.4),{size:.28,opacity:.95});
   makeLabel('liberated frequencies',venue.layers.labels,V(3.75,.18,8.65),{size:.28,opacity:.95});
   venue.coreClone=venueCore.group;venue.frequencyClone=venueFrequencies.group;venue.coreRobot=venueCore.map.get(core.robot);venue.coreSpot=venueCore.map.get(core.spot);
@@ -408,7 +412,7 @@ export function createExhibitionView(container, callbacks={}) {
       visitor:{pos:[8.2,1.65,1.4],target:[4.1,.75,4.5],fov:68},
       detail:{pos:[9.55,4.9,-1.55],target:[3.75,.65,3.4],fov:43}
     }:coreScene?{
-      perspective:{pos:[5.9,4.1,8.0],target:[0,.72,0],fov:42},front:{pos:[0,1.65,8.6],target:[0,1.25,0],fov:42},top:{pos:[0,9.8,.005],target:[0,.4,0],fov:42},side:{pos:[9,2.7,.03],target:[0,1.15,0],fov:42},visitor:{pos:[0,1.62,3.55],target:[0,.81,-.08],fov:55},detail:{pos:[1.8,1.5,2.35],target:[0,.56,0],fov:43}
+      perspective:{pos:[5.9,4.1,8.0],target:[0,.72,0],fov:42},front:{pos:[0,1.65,8.6],target:[0,1.25,0],fov:42},top:{pos:[0,9.8,.005],target:[0,.4,0],fov:42},side:{pos:[9,2.7,.03],target:[0,1.15,0],fov:42},visitor:{pos:[0,1.62,3.55],target:[0,.81,-.08],fov:55},detail:{pos:[2.3,1.9,3.0],target:[0,.56,0],fov:43}
     }:{perspective:{pos:[3.8,3.1,5.5],target:[0,1.25,0],fov:42},front:{pos:[0,1.8,6.5],target:[0,1.45,0],fov:42},top:{pos:[0,7.3,.005],target:[0,.8,0],fov:42},side:{pos:[6,2.5,.03],target:[0,1.35,0],fov:42},visitor:{pos:[0,1.65,2.2],target:[0,1.6,-.3],fov:65},detail:{pos:[1.1,1.85,1.6],target:[0,1.15,0],fov:45}};
     const v=views[view]||views.perspective;camera.position.set(...v.pos);controls.target.set(...v.target);lastFitFactor=fitMultiplier(view);camera.position.sub(controls.target).multiplyScalar(lastFitFactor).add(controls.target);camera.fov=v.fov;camera.updateProjectionMatrix();controls.update();
     api.view=view;
@@ -417,26 +421,29 @@ export function createExhibitionView(container, callbacks={}) {
       architectureRoot.traverse(o=>{if(o.userData.cutawayRoof)o.visible=!cutaway;if(o.userData.cutawayWall&&o.material){const ms=Array.isArray(o.material)?o.material:[o.material];for(const m of ms){if(m.userData.originalOpacity===undefined){m.userData.originalOpacity=m.opacity;m.userData.originalTransparent=m.transparent;m.userData.originalDepthWrite=m.depthWrite;}m.opacity=cutaway?.18:m.userData.originalOpacity;m.transparent=cutaway||m.userData.originalTransparent;m.depthWrite=cutaway?false:m.userData.originalDepthWrite;}}});return;}
     if(space.roof)space.roof.visible=!cutaway;for(const wall of space.walls){if(!cutaway){wall.o.visible=true;continue;}const p=camera.position;wall.o.visible=wall.side==='back'?p.z>-.1:wall.side==='left'?p.x>-.2:p.x<.2;}}
   const labelRay=new THREE.Raycaster(),labelPoint=V(),labelDirection=V();
-  function updateCurtainLabelOcclusion(){
+  function updatePanelLabelOcclusion(){
     const space=scenes[currentScene];
     const blocksLabels=currentScene!=='core'&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork);
     const curtain=currentScene==='venue'?venueCurtain:frequencyCurtain;
-    const fabric=blocksLabels?curtain.group.getObjectByName('tensioned-flat-blackout-fabric'):null;
+    const occluders=[];
+    if(blocksLabels)occluders.push(curtain.group.getObjectByName('tensioned-flat-blackout-fabric'));
+    if(currentScene==='venue'&&layerState.entranceMonitor)occluders.push(entranceMonitor.group.getObjectByName('entrance-monitor-portrait-body'));
     world.updateMatrixWorld(true);
     space.group.traverse(o=>{
       if(!o.isSprite)return;
+      if(api.view==='venue-information'){o.visible=false;return;}
       o.visible=true;
-      if(!fabric)return;
+      if(!occluders.length)return;
       o.getWorldPosition(labelPoint);labelDirection.copy(labelPoint).sub(camera.position);
       labelRay.set(camera.position,labelDirection.clone().normalize());labelRay.far=Math.max(0,labelDirection.length()-.015);
-      o.visible=labelRay.intersectObject(fabric,false).length===0;
+      o.visible=labelRay.intersectObjects(occluders,false).length===0;
     });
   }
   const api={
     renderer,camera,controls,scene:world,view:'perspective',
     setScene(name){if(!scenes[name])return;currentScene=name;world.fog.density=name==='venue'?.005:.027;for(const [key,space]of Object.entries(scenes))space.group.visible=key===name;select(null);setView('perspective');callbacks.onSceneChange?.(name);},
     setView,
-    setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[5.5,3.8,-4.4],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
+    setVenueFocus(name){if(currentScene!=='venue')api.setScene('venue');const a=anchorValues(name==='bar'?'counter':name);const target=V(...a.position);if(name==='core')target.y=.7;else if(name==='frequencies')target.y=1.1;else target.y=.9;const offsets={core:[5.5,3.8,-4.4],frequencies:[3.1,2.8,-3.6],bar:[3.3,3.2,4.8],entrance:[4.5,3.6,4.2],information:[1.9,1.3,-.95]};camera.position.copy(target).add(V(...(offsets[name]||offsets.core)));controls.target.copy(target);camera.fov=name==='information'?58:48;camera.updateProjectionMatrix();controls.update();api.view=`venue-${name}`;lastFitFactor=1;},
     setCurtainView(location='outside'){
       if(currentScene==='core')api.setScene('frequencies');
       const inside=location==='inside';let pos,target;
@@ -458,14 +465,14 @@ export function createExhibitionView(container, callbacks={}) {
     reset(){controls.autoRotate=false;animation=false;core.robot.rotation.y=0;if(venue)venue.coreRobot.rotation.y=0;renderer.toneMappingExposure=1.18;setView('perspective');select(null);},
     capture(){renderer.render(world,camera);return renderer.domElement.toDataURL('image/png');},
     resize(){const w=Math.max(container.clientWidth,1),h=Math.max(container.clientHeight,1);renderer.setSize(w,h);camera.aspect=w/h;const factor=fitMultiplier(api.view);camera.position.sub(controls.target).multiplyScalar(factor/lastFitFactor).add(controls.target);lastFitFactor=factor;camera.updateProjectionMatrix();},
-    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,curtain:{enabled:layerState.curtain,visible:hasFrequencies&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork),dimensions:hasFrequencies?(currentScene==='venue'?venueCurtain.dimensions:frequencyCurtain.dimensions):null,qrConfigured:false,qrPlaceholder:true},carpet:{enabled:layerState.carpet,areas:currentScene==='venue'?[coreCarpet.dimensions,venueFrequencyCarpet.dimensions]:[currentScene==='core'?coreCarpet.dimensions:frequencyCarpet.dimensions]},counts:{blackoutCurtains:hasFrequencies?1:0,carpets:currentScene==='venue'?2:1,speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,acrylicGeometry:{...acrylicGroup.userData.dimensions,vertices:acrylicGroup.userData.vertices,edges:acrylicGroup.userData.edges},provisional:{acrylicHeight:Math.abs(core.dims.acrylicHeight-ACRYLIC_REFERENCE.H)>1e-9,acrylicTop:false,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
+    getState(){const space=scenes[currentScene],hasCore=currentScene!=='frequencies',hasFrequencies=currentScene!=='core';const objects=[];space.group.traverse(o=>{if(o.userData.info)objects.push({...o.userData.info});});return {currentScene,scene:currentScene,view:api.view,cutaway,animation,autoRotate:controls.autoRotate,exposure:renderer.toneMappingExposure,layers:{...layerState},dimensions:{...space.dims},coreDimensions:{...core.dims},frequencyDimensions:{...frequencies.dims},venueDimensions:{...venue.dims},venueAnchors:venue.anchors,curtain:{enabled:layerState.curtain,visible:hasFrequencies&&layerState.curtain&&(currentScene!=='venue'||layerState.frequenciesWork),dimensions:hasFrequencies?(currentScene==='venue'?venueCurtain.dimensions:frequencyCurtain.dimensions):null,qrConfigured:false,qrPlaceholder:true},carpet:{enabled:hasCore&&layerState.carpet,available:hasCore,visible:hasCore&&layerState.carpet&&(currentScene!=='venue'||layerState.coreWork),areas:hasCore?[coreCarpet.dimensions]:[]},whiteFloor:{enabled:layerState.whiteFloor,available:hasCore,visible:hasCore&&layerState.whiteFloor&&(currentScene!=='venue'||layerState.coreWork),dimensions:hasCore?coreWhiteFloor.dimensions:null},entranceMonitor:{available:currentScene==='venue',visible:currentScene==='venue'&&layerState.entranceMonitor,borrowedPlanned:true,placeholder:true,dimensions:entranceMonitor.dimensions},counts:{blackoutCurtains:hasFrequencies?1:0,carpets:hasCore?1:0,whiteFloorSheets:hasCore?1:0,entranceMonitors:currentScene==='venue'?1:0,speakers:hasCore?12:0,cameras:hasCore?2:0,stones:hasCore?1:0,robotArms:hasCore?1:0,acrylicStructures:hasCore?1:0,headphones:hasFrequencies?4:0,headphoneStands:hasFrequencies?2:0,projectors:hasFrequencies?1:0,monitors:currentScene==='venue'?2:hasFrequencies?1:0,computers:hasFrequencies?2:0,pcs:hasFrequencies?2:0,audioInterfaces:hasFrequencies?1:0,eegDevices:hasFrequencies?1:0,earphones:hasFrequencies?1:0,fixtures:hasFrequencies?2:0,eegPlinths:hasFrequencies?1:0,monitorStands:hasFrequencies?1:0},objects,acrylicGeometry:{...acrylicGroup.userData.dimensions,vertices:acrylicGroup.userData.vertices,edges:acrylicGroup.userData.edges},provisional:{acrylicHeight:Math.abs(core.dims.acrylicHeight-ACRYLIC_REFERENCE.H)>1e-9,acrylicTop:false,frequencyDepth:true,stoneGeometry:true},cameraPosition:camera.position.toArray(),target:controls.target.toArray()};},
     dispose(){destroyed=true;cancelAnimationFrame(raf);observer?.disconnect();renderer.domElement.removeEventListener('pointerdown',onPointerDown);renderer.domElement.removeEventListener('pointerup',onPointerUp);renderer.domElement.removeEventListener('keydown',onKey);controls.dispose();world.traverse(o=>{o.geometry?.dispose();if(Array.isArray(o.material))o.material.forEach(m=>m.dispose());else o.material?.dispose();});texturePool.forEach(t=>t.dispose());renderer.dispose();renderer.domElement.remove();}
   };
   let observer;
   if(typeof ResizeObserver!=='undefined'){observer=new ResizeObserver(()=>api.resize());observer.observe(container);}
   world.fog.density=.005;api.resize();setView('perspective');
   function frame(){if(destroyed)return;raf=requestAnimationFrame(frame);const elapsed=clock.getElapsedTime();if(animation){core.robot.rotation.y=Math.sin(elapsed*.18)*.09;core.spot.position.x=.015+Math.sin(elapsed*.18)*.035;core.spot.target.position.x=Math.sin(elapsed*.18)*.045;if(venue){venue.coreRobot.rotation.y=core.robot.rotation.y;venue.coreSpot.position.copy(core.spot.position);venue.coreSpot.target.position.copy(core.spot.target.position);}}
-    controls.update();updateCutaway();updateCurtainLabelOcclusion();renderer.render(world,camera);
+    controls.update();updateCutaway();updatePanelLabelOcclusion();renderer.render(world,camera);
   }
   frame();requestAnimationFrame(()=>callbacks.onReady?.(api.getState()));
   return api;
